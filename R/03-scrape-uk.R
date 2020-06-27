@@ -15,12 +15,14 @@ all_speeches_page_uk_p1 <- read_html("https://www.rev.com/blog/transcript-tag/un
 all_speeches_page_uk_p2 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/2")
 all_speeches_page_uk_p3 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/3")
 all_speeches_page_uk_p4 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/4")
+all_speeches_page_uk_p5 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/5")
 
 all_speeches_page_uk <- list(
   all_speeches_page_uk_p1,
   all_speeches_page_uk_p2,
   all_speeches_page_uk_p3,
-  all_speeches_page_uk_p4
+  all_speeches_page_uk_p4,
+  all_speeches_page_uk_p5
 )
 
 get_speech_urls_uk <- function(page){
