@@ -48,7 +48,7 @@ covid_speeches_words %>%
   ungroup() %>%
   ggplot(aes(y = word, x = tf_idf, fill = origin)) +
   geom_col(show.legend = FALSE) +
-  labs(y = NULL, x = "tf-idf") +
+  labs(y = NULL, x = "tf-idf", title = "Common words in COVID briefings") +
   facet_wrap(~origin, ncol = 2, scales = "free") +
   scale_fill_manual(values = c(scotblue, ukred))
 

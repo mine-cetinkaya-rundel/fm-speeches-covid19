@@ -310,7 +310,7 @@ covid_speeches_scot_paragraphs %>%
 
 # save calculated objects ------------------------------------------------------
 
-write_rds(covid_speeches_scot, path = "processed-data/covid_speeches_scot.rds")
-write_rds(covid_speeches_scot_bigrams, path = "processed-data/covid_speeches_scot_bigrams.rds")
-write_rds(covid_speeches_scot_paragraphs, path = "processed-data/covid_speeches_scot_paragraphs.rds")
-write_rds(covid_speeches_scot_words, path = "processed-data/covid_speeches_scot_words.rds")
+write_rds(covid_speeches_scot, file = "processed-data/covid_speeches_scot.rds")
+write_rds(covid_speeches_scot_bigrams, file = "processed-data/covid_speeches_scot_bigrams.rds")
+write_rds(covid_speeches_scot_paragraphs, file = "processed-data/covid_speeches_scot_paragraphs.rds")
+write_rds(covid_speeches_scot_words, file = "processed-data/covid_speeches_scot_words.rds")

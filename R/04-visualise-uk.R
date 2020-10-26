@@ -26,7 +26,7 @@ covid_speeches_uk <- read_rds(here::here("data", "covid-speeches-uk.rds")) %>%
 speakers <- covid_speeches_uk %>%
   unnest_longer(text) %>%
   group_by(speech_no) %>%
-  slice_head(1) %>%
+  slice_head(n = 1) %>%
   ungroup() %>%
   mutate(speaker = text %>% str_match(".*?:") %>% str_remove(":")) %>%
   select(speech_no, speaker)
@@ -144,7 +144,8 @@ covid_speeches_uk_words <- covid_speeches_uk_paragraphs %>%
     paragraph = str_replace_all(paragraph, "Covid 19", "COVID_19")
   ) %>%
   unnest_tokens(word, paragraph) %>%
-  anti_join(stop_words)
+  anti_join(stop_words) %>%
+  filter(!(word %in% as.character(paste0(0, 0:9))))
 
 covid_speeches_uk_words %>%
   count(word, sort = TRUE) %>%
@@ -303,7 +304,7 @@ covid_speeches_uk_paragraphs %>%
 
 # save calculated objects ------------------------------------------------------
 
-write_rds(covid_speeches_uk, path = "processed-data/covid_speeches_uk.rds")
-write_rds(covid_speeches_uk_bigrams, path = "processed-data/covid_speeches_uk_bigrams.rds")
-write_rds(covid_speeches_uk_paragraphs, path = "processed-data/covid_speeches_uk_paragraphs.rds")
-write_rds(covid_speeches_uk_words, path = "processed-data/covid_speeches_uk_words.rds")
+write_rds(covid_speeches_uk, file = "processed-data/covid_speeches_uk.rds")
+write_rds(covid_speeches_uk_bigrams, file = "processed-data/covid_speeches_uk_bigrams.rds")
+write_rds(covid_speeches_uk_paragraphs, file = "processed-data/covid_speeches_uk_paragraphs.rds")
+write_rds(covid_speeches_uk_words, file = "processed-data/covid_speeches_uk_words.rds")
