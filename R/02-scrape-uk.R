@@ -75,4 +75,4 @@ covid_speeches_uk <- map_dfr(covid_speech_urls_uk, scrape_speech_uk)
 
 # write scraped data -----------------------------------------------------------
 
-write_rds(covid_speeches_uk, path = here::here("data", "covid-speeches-uk.rds"))
+write_rds(covid_speeches_uk, file = here::here("data", "covid-speeches-uk.rds"))
