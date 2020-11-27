@@ -131,7 +131,7 @@ covid_speeches_scot_words <- covid_speeches_scot_paragraphs %>%
 
 covid_speeches_scot_words %>%
   count(word, sort = TRUE) %>%
-  filter(n > 200) %>%
+  filter(n > 400) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = n)) +
   geom_col() +
   guides(fill = FALSE) +
@@ -182,27 +182,43 @@ covid_speeches_scot_words %>%
     y = NULL, x = NULL
   )
 
+# daily sentiments
 
 covid_speeches_scot_words %>%
   inner_join(get_sentiments("bing")) %>%
   count(date, sentiment) %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
-  mutate(
-    sentiment = positive - negative,
-    wednesday = if_else(wday(date, label = TRUE) == "Wed", "Wednesday", "Non-Wednesday")
-    ) %>%
+  mutate(sentiment = positive - negative) %>%
   ggplot(aes(x = date, y = sentiment)) +
   geom_line(color = "gray") +
-  geom_point(aes(shape = wednesday, color = sentiment > 0), size = 2) +
+  geom_point(aes(color = sentiment > 0), size = 2) +
   #scale_color_manual(values = c("gray", "red")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   guides(color = FALSE) +
   labs(
-    title = "Sentiment score of words in First Minister's COVID-19 briefings over time",
-    subtitle = "Sentiment score calculated as the difference between the number of words with positive and negative sentiments according to the Bing lexicon",
-    caption = "On Wednesdays, National Records of Scotland report that captures all deaths with a confirmed 
-    laboratory diagnosis of COVID-19 well as deaths which are presumed to be linked to the virus.",
-    x = "Date", y = "Sentiment score", shape = NULL
+    title = "Daily sentiment score of words in First Minister's COVID-19 briefings",
+    subtitle = "Sentiment score calculated as the difference between the number of words with 
+positive and negative sentiments according to the Bing lexicon",
+    x = "Date", y = "Sentiment score"
+  ) +
+  theme(legend.position = "bottom")
+
+covid_speeches_scot_words %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(date, sentiment) %>%
+  pivot_wider(names_from = sentiment, values_from = n) %>%
+  mutate(sentiment = positive - negative) %>%
+  ggplot(aes(x = date, y = sentiment)) +
+  geom_smooth(color = "gray") +
+  geom_point(aes(color = sentiment > 0), size = 1) +
+  #scale_color_manual(values = c("gray", "red")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
+  guides(color = FALSE) +
+  labs(
+    title = "Daily sentiment score of words in First Minister's COVID-19 briefings",
+    subtitle = "Sentiment score calculated as the difference between the number of words with 
+positive and negative sentiments according to the Bing lexicon",
+    x = "Date", y = "Sentiment score"
   ) +
   theme(legend.position = "bottom")
 
@@ -266,7 +282,7 @@ covid_speeches_scot_bigrams <- covid_speeches_scot_paragraphs %>%
   anti_join(stop_words) %>%    # drop rows with stop words
   group_by(i) %>%    # group by bigram index
   filter(n() == 2) %>%    # drop bigram instances where only one word left
-  summarise(bigram = unique(bigram))
+  summarise(bigram = unique(bigram), .groups = "drop")
 
 covid_speeches_scot_bigrams %>%
   mutate(
@@ -274,13 +290,13 @@ covid_speeches_scot_bigrams %>%
     bigram = if_else(bigram == "care homes", "care home(s)", bigram)
   ) %>%
   count(bigram, sort = TRUE) %>%
-  filter(n > 30) %>%
+  filter(n > 60) %>%
   ggplot(aes(y = fct_reorder(bigram, n), x = n, fill = n)) +
   geom_col() +
   guides(fill = FALSE) +
   labs(
     title = "Frequency of bigrams in First Minister's COVID-19 briefings",
-    subtitle = "Bigrams occurring more than 30 times",
+    subtitle = "Bigrams occurring more than 60 times",
     y = NULL, x = NULL
   )
 
@@ -306,7 +322,8 @@ covid_speeches_scot_paragraphs %>%
   labs(x = "Date", y = "Frequency",
        title = "Social (S) vs. physical (P) distancing",
        subtitle = "Number of mentions over time") +
-  scale_color_manual(values = c(scotblue, "darkgray"))
+  scale_color_manual(values = c(scotblue, "darkgray")) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 2))
 
 # save calculated objects ------------------------------------------------------
 
