@@ -7,7 +7,7 @@ library(here)
 
 # set theme for plots to minimal -----------------------------------------------
 
-theme_set(theme_minimal())
+theme_set(theme_minimal(base_size = 16))
 
 # set color --------------------------------------------------------------------
 
@@ -23,6 +23,14 @@ covid_speeches_scot_words <- covid_speeches_scot_words %>%
 covid_speeches_uk_words <- read_rds(here::here("processed-data", "covid_speeches_uk_words.rds"))
 covid_speeches_uk_words <- covid_speeches_uk_words %>%
   mutate(origin = "UK")
+
+uk_speakers <- covid_speeches_uk_words %>% 
+  count(speaker, sort = TRUE) %>%
+  select(speaker) %>%
+  unnest_tokens(word, speaker)
+
+covid_speeches_uk_words <- covid_speeches_uk_words %>%
+  anti_join(uk_speakers, by = "word")
 
 # bind data& calculate tf-idf --------------------------------------------------
 
