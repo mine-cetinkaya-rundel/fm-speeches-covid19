@@ -8,6 +8,7 @@ library(tidyverse)
 library(rvest)
 library(lubridate)
 library(here)
+library(glue)
 
 # uk covid speech urls  --------------------------------------------------------
 
@@ -52,7 +53,7 @@ covid_speech_urls_uk <- speech_urls_uk %>%
 
 scrape_speech_uk <- function(url){
   
-  speech_page <- read_html(url)
+  speech_page <-h_page <- read_html(url)
   
   title <- speech_page %>%
     html_node(".gem-c-title__text--long") %>%
@@ -68,28 +69,20 @@ scrape_speech_uk <- function(url){
     str_trim() %>%
     dmy()
   
-  text_with_title <- speech_page %>% 
-    html_nodes(".content-bottom-margin , .govspeak li , .govspeak p") %>%
+  abstract <- speech_page %>%
+    html_node(".gem-c-lead-paragraph") %>%
+    html_text()
+  
+  text <- speech_page %>% 
+    html_nodes(".govspeak li , .govspeak p") %>%
     html_text() %>%
-    str_trim() %>%
-    str_squish() %>%
     glue_collapse(sep = " ") %>%
     as.character()
-  
-  box_on_top <- speech_page %>%
-    html_node(".app-c-important-metadata--bottom-margin") %>%
-    html_text() %>%
-    str_remove_all("\\n") %>%
-    str_squish()
-  
-  text <- text_with_title %>%
-    str_remove(fixed(box_on_top)) %>%
-    str_remove(fixed(title)) %>%
-    str_trim()
   
   tibble(
     title    = title,
     date     = date,
+    abstract = abstract,
     text     = text,
     url      = url
   )
@@ -98,7 +91,7 @@ scrape_speech_uk <- function(url){
 
 # scrape all covid speeches ----------------------------------------------------
 
-covid_speeches_uk <- map_dfr(covid_speech_urls_uk, scrape_speech_uk)
+covid_speeches_uk <- map_dfr(covid_speech_urls_uk$url, scrape_speech_uk)
 
 # write scraped data -----------------------------------------------------------
 
