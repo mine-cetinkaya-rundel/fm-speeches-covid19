@@ -1,6 +1,6 @@
 # check we can do this ---------------------------------------------------------
 
-robotstxt::paths_allowed("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts")
+robotstxt::paths_allowed("https://www.gov.uk/")
 
 # load packages ----------------------------------------------------------------
 
@@ -8,14 +8,15 @@ library(tidyverse)
 library(rvest)
 library(lubridate)
 library(here)
+library(glue)
 
 # uk covid speech urls  --------------------------------------------------------
 
-all_speeches_page_uk_p1 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts")
-all_speeches_page_uk_p2 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/2")
-all_speeches_page_uk_p3 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/3")
-all_speeches_page_uk_p4 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/4")
-all_speeches_page_uk_p5 <- read_html("https://www.rev.com/blog/transcript-tag/united-kingdom-coronavirus-briefing-transcripts/page/5")
+all_speeches_page_uk_p1 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=1&parent=prime-ministers-office-10-downing-street")
+all_speeches_page_uk_p2 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=2&parent=prime-ministers-office-10-downing-street")
+all_speeches_page_uk_p3 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=3&parent=prime-ministers-office-10-downing-street")
+all_speeches_page_uk_p4 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=4&parent=prime-ministers-office-10-downing-street")
+all_speeches_page_uk_p5 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=5&parent=prime-ministers-office-10-downing-street")
 
 all_speeches_page_uk <- list(
   all_speeches_page_uk_p1,
@@ -27,37 +28,56 @@ all_speeches_page_uk <- list(
 
 get_speech_urls_uk <- function(page){
   
-  page %>%
-    html_nodes(xpath = '//meta[@itemprop="mainEntityOfPage"]') %>% 
-    html_attr("itemid")
+  titles <- page %>%
+    html_nodes(".gem-c-document-list__item-link") %>% 
+    html_text()
+  
+  urls <- page %>%
+    html_nodes(".gem-c-document-list__item-link") %>% 
+    html_attr("href") %>%
+    paste0("https://www.gov.uk/", .)
+  
+  tibble(
+    title = titles,
+    url   = urls
+  )
   
 }
 
-covid_speech_urls_uk <- map(all_speeches_page_uk, get_speech_urls_uk) %>% unlist()
+speech_urls_uk <- map_dfr(all_speeches_page_uk, get_speech_urls_uk)
+
+covid_speech_urls_uk <- speech_urls_uk %>%
+  filter(str_detect(title, "statement on coronavirus"))
 
 # function to scrape each speech -----------------------------------------------
 
 scrape_speech_uk <- function(url){
   
-  speech_page <- read_html(url)
+  speech_page <-h_page <- read_html(url)
   
   title <- speech_page %>%
-    html_node("#fl-main-content .fl-heading-text") %>%
-    html_text()
+    html_node(".gem-c-title__text--long") %>%
+    html_text() %>%
+    str_remove_all("\\n") %>%
+    str_trim()
   
   date <- speech_page %>%
-    html_node(".fl-node-5deef52516c90 p") %>%
+    html_node(".app-c-publisher-metadata .app-c-published-dates") %>%
     html_text() %>%
-    mdy()
+    str_remove("Published ") %>%
+    str_remove_all("\\n") %>%
+    str_trim() %>%
+    dmy()
   
   abstract <- speech_page %>%
-    html_node(".fl-node-5e186cbbd29ea .fl-rich-text > p:nth-child(1)") %>%
+    html_node(".gem-c-lead-paragraph") %>%
     html_text()
   
   text <- speech_page %>% 
-    html_nodes("#transcription p") %>%
+    html_nodes(".govspeak li , .govspeak p") %>%
     html_text() %>%
-    list()
+    glue_collapse(sep = " ") %>%
+    as.character()
   
   tibble(
     title    = title,
@@ -71,7 +91,7 @@ scrape_speech_uk <- function(url){
 
 # scrape all covid speeches ----------------------------------------------------
 
-covid_speeches_uk <- map_dfr(covid_speech_urls_uk, scrape_speech_uk)
+covid_speeches_uk <- map_dfr(covid_speech_urls_uk$url, scrape_speech_uk)
 
 # write scraped data -----------------------------------------------------------
 
