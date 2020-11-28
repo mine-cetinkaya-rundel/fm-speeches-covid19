@@ -35,12 +35,9 @@ covid_speeches_scot <- covid_speeches_scot %>%
       TRUE                                     ~ NA_character_
     )
   ) %>%
-  # count paragraphs and words
+  # count words
   rowwise() %>%
-  mutate(
-    n_paragraphs = unlist(text) %>% length(),
-    n_words      = unlist(text) %>% str_count("\\w+") %>% sum()
-  ) %>%
+  mutate(n_words = text %>% str_count("\\w+") %>% sum()) %>%
   ungroup()
 
 # keep only speeches by the FM -------------------------------------------------
@@ -52,42 +49,6 @@ covid_speeches_scot <- covid_speeches_scot %>%
   rowid_to_column(var = "speech_no")
 
 # how long do they speak? ------------------------------------------------------
-
-# number of paragraphs ----
-
-ggplot(covid_speeches_scot, aes(x = n_paragraphs)) +
-  geom_density(color = scotblue, fill = scotblue, alpha = 0.5) +
-  labs(
-    title = "Distribution of number of paragphs",
-    subtitle = "of First Minister's daily briefings",
-    x = "Number of paragraphs",
-    y = "Density"
-  )
-
-ggplot(covid_speeches_scot, aes(x = n_words)) +
-  geom_density(color = scotblue, fill = scotblue, alpha = 0.5) +
-  labs(
-    title = "Distribution of number of words",
-    subtitle = "of First Minister's daily briefings",
-    x = "Number of words",
-    y = "Density"
-  )
-
-# number of paragraphs vs. date ----
-
-lm_paragraphs <- lm(n_paragraphs ~ date, data = covid_speeches_scot)
-lm_paragraphs_rsq <- glance(lm_paragraphs)$r.squared
-
-covid_speeches_scot %>%
-  ggplot(aes(x = date, y = n_paragraphs)) +
-  geom_point(color = scotblue, alpha = 0.7) +
-  geom_smooth(aes(x = date, y = n_paragraphs), method = lm, 
-              formula = y ~ x, color = "darkgray") +
-  labs(
-    title = "Length of First Minister's COVID-19 speeches",
-    subtitle = glue("Measured in number of paragraphs, R-squared = {percent(lm_paragraphs_rsq)}"),
-    x = NULL, y = "Number of paragraphs", color = NULL, shape = NULL
-  )
 
 # number of words vs. date ----
 
@@ -106,27 +67,17 @@ covid_speeches_scot %>%
 
 # word analysis ----------------------------------------------------------------
 
-covid_speeches_scot_paragraphs <- covid_speeches_scot %>%
-  unnest_longer(
-    col = text,
-    values_to = "paragraph",
-    indices_to = "paragraph_no"
-  ) %>%
-  group_by(speech_no) %>%
-  mutate(paragraph_no = row_number()) %>%
-  ungroup()
-
-covid_speeches_scot_words <- covid_speeches_scot_paragraphs %>%
+covid_speeches_scot_words <- covid_speeches_scot %>%
   # make sure COVID-19 (and all its various spellings) don't get split
   # tidytext doesn't remove underscores
   # https://stackoverflow.com/questions/58281091/preserve-hyphenated-words-in-ngrams-analysis-with-tidytext
   mutate(
-    paragraph = str_replace_all(paragraph, "COVID-19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "COVID 19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "Covid-19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "Covid 19", "COVID_19")
+    text = str_replace_all(text, "COVID-19", "COVID_19"),
+    text = str_replace_all(text, "COVID 19", "COVID_19"),
+    text = str_replace_all(text, "Covid-19", "COVID_19"),
+    text = str_replace_all(text, "Covid 19", "COVID_19")
   ) %>%
-  unnest_tokens(word, paragraph) %>%
+  unnest_tokens(word, text) %>%
   anti_join(stop_words)
 
 covid_speeches_scot_words %>%
@@ -265,17 +216,17 @@ covid_speeches_scot_words %>%
 
 # 2-grams ----------------------------------------------------------------------
 
-covid_speeches_scot_bigrams <- covid_speeches_scot_paragraphs %>%
+covid_speeches_scot_bigrams <- covid_speeches_scot %>%
   # make sure COVID-19 (and all its various spellings) don't get split
   # tidytext doesn't remove underscores
   # https://stackoverflow.com/questions/58281091/preserve-hyphenated-words-in-ngrams-analysis-with-tidytext
   mutate(
-    paragraph = str_replace_all(paragraph, "COVID-19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "COVID 19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "Covid-19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "Covid 19", "COVID_19")
+    text = str_replace_all(text, "COVID-19", "COVID_19"),
+    text = str_replace_all(text, "COVID 19", "COVID_19"),
+    text = str_replace_all(text, "Covid-19", "COVID_19"),
+    text = str_replace_all(text, "Covid 19", "COVID_19")
   ) %>%
-  unnest_tokens(bigram, paragraph, token = "ngrams", n = 2) %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
   # drop bigrams with stopwords
   mutate(i = row_number()) %>%    # add index for later grouping
   unnest_tokens(word, bigram, drop = FALSE) %>%    # tokenize bigrams into words
@@ -302,17 +253,17 @@ covid_speeches_scot_bigrams %>%
 
 # social to physical distancing
 
-covid_speeches_scot_paragraphs %>%
+covid_speeches_scot %>%
   # make sure COVID-19 (and all its various spellings) don't get split
   # tidytext doesn't remove underscores
   # https://stackoverflow.com/questions/58281091/preserve-hyphenated-words-in-ngrams-analysis-with-tidytext
   mutate(
-    paragraph = str_replace_all(paragraph, "COVID-19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "COVID 19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "Covid-19", "COVID_19"),
-    paragraph = str_replace_all(paragraph, "Covid 19", "COVID_19")
+    text = str_replace_all(text, "COVID-19", "COVID_19"),
+    text = str_replace_all(text, "COVID 19", "COVID_19"),
+    text = str_replace_all(text, "Covid-19", "COVID_19"),
+    text = str_replace_all(text, "Covid 19", "COVID_19")
   ) %>%
-  unnest_tokens(bigram, paragraph, token = "ngrams", n = 2) %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
   filter(str_detect(bigram, "social dist|physical dist")) %>%
   mutate(soc_phys = if_else(str_detect(bigram, "social"), "S", "P")) %>%
   count(date, soc_phys) %>%
@@ -329,5 +280,4 @@ covid_speeches_scot_paragraphs %>%
 
 write_rds(covid_speeches_scot, file = "processed-data/covid_speeches_scot.rds")
 write_rds(covid_speeches_scot_bigrams, file = "processed-data/covid_speeches_scot_bigrams.rds")
-write_rds(covid_speeches_scot_paragraphs, file = "processed-data/covid_speeches_scot_paragraphs.rds")
 write_rds(covid_speeches_scot_words, file = "processed-data/covid_speeches_scot_words.rds")

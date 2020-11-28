@@ -45,7 +45,8 @@ scrape_speech_scot <- function(url){
   text <- speech_page %>% 
     html_nodes("#preamble p") %>%
     html_text() %>%
-    list()
+    glue_collapse(sep = " ") %>%
+    as.character()
   
   tibble(
     title    = title,
