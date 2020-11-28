@@ -24,14 +24,6 @@ covid_speeches_uk_words <- read_rds(here::here("processed-data", "covid_speeches
 covid_speeches_uk_words <- covid_speeches_uk_words %>%
   mutate(origin = "UK")
 
-uk_speakers <- covid_speeches_uk_words %>% 
-  count(speaker, sort = TRUE) %>%
-  select(speaker) %>%
-  unnest_tokens(word, speaker)
-
-covid_speeches_uk_words <- covid_speeches_uk_words %>%
-  anti_join(uk_speakers, by = "word")
-
 # bind data& calculate tf-idf --------------------------------------------------
 
 covid_speeches_words <- bind_rows(covid_speeches_scot_words, covid_speeches_uk_words) %>%
