@@ -8,6 +8,7 @@ library(tidyverse)
 library(rvest)
 library(lubridate)
 library(here)
+library(glue)
 
 # covid speech urls  -----------------------------------------------------------
 
