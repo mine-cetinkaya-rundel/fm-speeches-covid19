@@ -13,13 +13,13 @@ covid_speeches_scot %>%
   geom_point(color = scotblue, alpha = 0.7) +
   geom_smooth(aes(x = date, y = n_words), method = lm, formula = y ~ x, color = "darkgray") +
   labs(
-    title = "Length of First Minister's COVID-19 speeches",
+    title = "Length of FM's COVID-19 speeches",
     subtitle = glue("Measured in number of words, R-squared = {percent(lm_words_rsq)}"),
     x = NULL, y = "Number of words", color = NULL, shape = NULL
   )
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-1-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
 
 ## Word frequency
 
@@ -33,13 +33,13 @@ covid_speeches_scot_words %>%
   geom_col() +
   guides(fill = FALSE) +
   labs(
-    title = "Frequency of words in First Minister's COVID-19 briefings",
+    title = "Frequency of words in FM's COVID-19 briefings",
     subtitle = glue("Words occurring more than {threshold} times"),
     y = NULL, x = NULL
   )
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-2-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
 
 ## Sentiment analysis
 
@@ -47,7 +47,7 @@ Sentiments: Positive and negative.
 
 ``` r
 covid_speeches_scot_words %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
   count(sentiment, word, sort = TRUE) %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
@@ -56,15 +56,13 @@ covid_speeches_scot_words %>%
   guides(fill = FALSE) +
   facet_wrap(~ sentiment, scales = "free") +
   labs(
-    title = "Sentiment and frequency of words in First Minister's COVID-19 briefings",
+    title = "Sentiment and frequency of words in FM's COVID-19 briefings",
     subtitle = "Sentiment evaluated using the Bing lexicon",
     y = NULL, x = NULL
   )
 ```
 
-    ## Joining, by = "word"
-
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-3-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
 
 “positive” isn’t really a positive word in this context. Remove and plot
 again.
@@ -76,7 +74,7 @@ covid_speeches_scot_words <- covid_speeches_scot_words %>%
 
 ``` r
 covid_speeches_scot_words %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
   count(sentiment, word, sort = TRUE) %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
@@ -85,15 +83,13 @@ covid_speeches_scot_words %>%
   guides(fill = FALSE) +
   facet_wrap(~ sentiment, scales = "free") +
   labs(
-    title = "Sentiment and frequency of words in First Minister's COVID-19 briefings",
+    title = "Sentiment and frequency of words in FM's COVID-19 briefings",
     subtitle = "Sentiment evaluated using the Bing lexicon",
     y = NULL, x = NULL
   )
 ```
 
-    ## Joining, by = "word"
-
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-5-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
 
 ## Daily sentiments
 
@@ -103,7 +99,7 @@ Sentiments: Positive and negative.
 
 ``` r
 covid_speeches_scot_words %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
   count(date, sentiment) %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
   mutate(sentiment = positive - negative) %>%
@@ -114,46 +110,40 @@ covid_speeches_scot_words %>%
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in First Minister's COVID-19 briefings",
-    subtitle = "Sentiment score calculated as the difference between the number of words with 
-positive and negative sentiments according to the Bing lexicon",
+    title = "Daily sentiment score of words in FM's COVID-19 briefings",
+    subtitle = "Sentiment score = Number of words with 
+positive - negative sentiments, Bing lexicon",
     x = "Date", y = "Sentiment score"
   ) +
   theme(legend.position = "bottom")
 ```
 
-    ## Joining, by = "word"
-
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-6-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-6-1.png" width="100%" />
 
 and now with a smooth curve…
 
 ``` r
 covid_speeches_scot_words %>%
-  inner_join(get_sentiments("bing")) %>%
+  inner_join(get_sentiments("bing"), by = "word") %>%
   count(date, sentiment) %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
   mutate(sentiment = positive - negative) %>%
   ggplot(aes(x = date, y = sentiment)) +
-  geom_smooth(color = "gray") +
+  geom_smooth(color = "gray", method = "lm", formula = y ~ x) +
   geom_point(aes(color = sentiment > 0), size = 1) +
   #scale_color_manual(values = c("gray", "red")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in First Minister's COVID-19 briefings",
-    subtitle = "Sentiment score calculated as the difference between the number of words with 
-positive and negative sentiments according to the Bing lexicon",
+    title = "Daily sentiment score of words in FM's COVID-19 briefings",
+    subtitle = "Sentiment score = Number of words with 
+positive - negative sentiments, Bing lexicon",
     x = "Date", y = "Sentiment score"
   ) +
   theme(legend.position = "bottom")
 ```
 
-    ## Joining, by = "word"
-
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
-
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-7-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
 
 ### Lexicon: NRC
 
@@ -162,7 +152,7 @@ disgust, joy, and anticipation.
 
 ``` r
 covid_speeches_scot_words %>%
-  inner_join(get_sentiments("nrc")) %>%
+  inner_join(get_sentiments("nrc"), by = "word") %>%
   mutate(
     sentiment = fct_relevel(sentiment, "positive", "anticipation", "joy", "surprise", "trust",
                             "negative", "anger", "disgust", "fear", "sadness"),
@@ -176,19 +166,19 @@ covid_speeches_scot_words %>%
   guides(fill = FALSE) +
   facet_wrap(~ sentiment, scales = "free_y", ncol = 5) +
   labs(
-    title = "Sentiment and frequency of words in First Minister's COVID-19 briefings",
+    title = "Sentiment and frequency of words in FM's COVID-19 briefings",
     subtitle = "Sentiment evaluated using the NRC lexicon",
     y = NULL, x = NULL
-  )
+  ) +
+  scale_x_continuous(breaks = c(0, 1000)) +
+  theme_minimal(base_size = 11)
 ```
 
-    ## Joining, by = "word"
-
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-8-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 ``` r
 covid_speeches_scot_words %>%
-  inner_join(get_sentiments("nrc")) %>%
+  inner_join(get_sentiments("nrc"), by = "word") %>%
   mutate(
     sentiment = fct_relevel(sentiment, "positive", "anticipation", "joy", "surprise", "trust",
                             "negative", "anger", "sadness", "disgust", "fear"),
@@ -200,15 +190,13 @@ covid_speeches_scot_words %>%
   guides(color = FALSE) +
   facet_wrap(~ sentiment, ncol = 5) +
   labs(
-    title = "Sentiment score of words in First Minister's COVID-19 briefings over time",
-    subtitle = "Sentiment score calculated as number of words associated with a given sentiment according to the NRC lexicon",
+    title = "Sentiment score of words in FM's COVID-19 briefings over time",
+    subtitle = "Sentiment evaluated using the NRC lexicon",
     x = "Date", y = "Sentiment score", shape = NULL, color = NULL
   )
 ```
 
-    ## Joining, by = "word"
-
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-9-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
 
 ## Bigram frequency
 
@@ -224,13 +212,13 @@ covid_speeches_scot_bigrams %>%
   geom_col() +
   guides(fill = FALSE) +
   labs(
-    title = "Frequency of bigrams in First Minister's COVID-19 briefings",
+    title = "Frequency of bigrams in FM's COVID-19 briefings",
     subtitle = "Bigrams occurring more than 60 times",
     y = NULL, x = NULL
   )
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-10-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
 
 ## Social vs. physical distancing
 
@@ -259,4 +247,4 @@ covid_speeches_scot %>%
   scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 2))
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-11-1.png" width="90%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
