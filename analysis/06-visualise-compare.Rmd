@@ -1,0 +1,116 @@
+---
+title: "06-visualise-compare"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(tidytext)
+library(lubridate)
+library(here)
+library(scales)
+library(glue)
+
+# set theme for plots to minimal
+theme_set(theme_minimal(base_size = 12))
+
+# set color
+scotblue <- "#0065BF"
+ukred <- "#D00C27"
+
+# figure sizing
+knitr::opts_chunk$set(
+  fit.width = 6,
+  fig.asp = 0.618,
+  fig.retina = 3, 
+  out.width = "100%",
+  dpi = 300
+)
+
+# read data
+covid_speeches_scot_words <- read_rds(here::here("processed-data", "covid-speeches-scot-words.rds"))
+
+covid_speeches_uk_words <- read_rds(here::here("processed-data", "covid-speeches-uk-words.rds"))
+```
+
+```{r assign-origin}
+covid_speeches_scot_words <- covid_speeches_scot_words %>%
+  mutate(origin = "Scotland")
+
+covid_speeches_uk_words <- covid_speeches_uk_words %>%
+  mutate(origin = "UK")
+```
+
+```{r bind-data}
+covid_speeches_words <- covid_speeches_scot_words %>%
+  select(-location, -speaker) %>% # uk data doesn't have these
+  bind_rows(covid_speeches_uk_words)
+```
+
+## Basic comparison
+
+More speeches in Scotland than UK and longer on average.
+
+```{r}
+covid_speeches_words %>%
+  group_by(origin) %>%
+  summarise(
+    n_speeches = max(speech_no),
+    n_words    = n(),
+    avg_words  = n_words / n_speeches
+    )
+```
+
+```{r fig.asp = 0.5}
+covid_speeches_words %>%
+  distinct(origin, speech_no, .keep_all = TRUE) %>%
+  ggplot(aes(x = n_words, color = origin, fill = origin)) +
+  geom_density(alpha = 0.7) +
+  scale_color_manual(values = c(scotblue, ukred)) +
+  scale_fill_manual(values = c(scotblue, ukred)) +
+  labs(
+    x = "Number of words",
+    y = "Density",
+    color = "Origin", fill = "Origin"
+  ) +
+  theme(axis.text.y = element_blank())
+```
+
+## TF-IDF
+
+Calculate tf-idf
+
+```{r}
+covid_speeches_tf_ifd <- covid_speeches_words %>%
+  count(origin, word, sort = TRUE) %>%
+  group_by(origin) %>%
+  mutate(total = sum(n)) %>%
+  bind_tf_idf(word, origin, n)
+```
+
+View words with high TF-IDF
+
+```{r}
+covid_speeches_tf_ifd %>%
+  select(-total) %>%
+  arrange(desc(tf_idf))
+```
+
+Visualise TF-IDF
+
+```{r}
+covid_speeches_tf_ifd %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(origin) %>% 
+  top_n(15) %>% 
+  ungroup() %>%
+  ggplot(aes(y = word, x = tf_idf, fill = origin)) +
+  geom_col(show.legend = FALSE) +
+  labs(y = NULL, x = "tf-idf", title = "Common words in COVID briefings") +
+  facet_wrap(~origin, ncol = 2, scales = "free") +
+  scale_fill_manual(values = c(scotblue, ukred)) +
+  scale_x_continuous(breaks = c(0, 0.0005, 0.001), labels = label_number())
+```
