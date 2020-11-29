@@ -2,6 +2,15 @@
 ================
 2020-11-29
 
+## Remove stop words
+
+``` r
+covid_speeches_uk_words <- covid_speeches_uk_words %>%
+  anti_join(stop_words)
+```
+
+    ## Joining, by = "word"
+
 ## Length of speech
 
 ``` r

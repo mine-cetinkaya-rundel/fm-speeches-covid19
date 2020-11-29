@@ -2,6 +2,15 @@
 ================
 2020-11-29
 
+## Remove stop words
+
+``` r
+covid_speeches_scot_words <- covid_speeches_scot_words %>%
+  anti_join(stop_words)
+```
+
+    ## Joining, by = "word"
+
 ## Length of speech
 
 ``` r
@@ -12,7 +21,8 @@ ggplot(covid_speeches_scot, aes(x = n_words)) +
     subtitle = "of Scotland daily briefings",
     x = "Number of words",
     y = "Density"
-  )
+  ) +
+  theme(axis.text.y = element_blank())
 ```
 
 <img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />

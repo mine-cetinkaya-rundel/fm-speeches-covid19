@@ -36,8 +36,7 @@ covid_speeches_uk_words <- covid_speeches_uk %>%
     text = str_replace_all(text, "Covid-19", "COVID_19"),
     text = str_replace_all(text, "Covid 19", "COVID_19")
   ) %>%
-  unnest_tokens(word, text) %>%
-  anti_join(stop_words)
+  unnest_tokens(word, text)
 
 # tokenize 2-grams -------------------------------------------------------------
 
@@ -64,4 +63,4 @@ covid_speeches_uk_bigrams <- covid_speeches_uk %>%
 
 write_rds(covid_speeches_uk, file = "processed-data/covid-speeches-uk.rds")
 write_rds(covid_speeches_uk_bigrams, file = "processed-data/covid-speeches-uk-bigrams.rds")
-write_rds(covid_speeches_uk_words, file = "processed-data/covid-speeches-uk-words.rds")
+write_rds(covid_speeches_uk_words, file = "processed-data/covid-speeches-uk-words.rds", compress = "bz2")
