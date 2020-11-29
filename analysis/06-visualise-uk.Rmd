@@ -1,19 +1,49 @@
-05-visualise-uk
-================
-2020-11-29
+---
+title: "06-visualise-uk"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(tidytext)
+library(lubridate)
+library(here)
+library(scales)
+library(glue)
+
+# set theme for plots to minimal
+theme_set(theme_minimal(base_size = 12))
+
+# set color
+ukred <- "#D00C27"
+
+# figure sizing
+knitr::opts_chunk$set(
+  fit.width = 6,
+  fig.asp = 0.618,
+  fig.retina = 3, 
+  out.width = "100%",
+  dpi = 300
+)
+
+# read data
+covid_speeches_uk <- read_rds(here::here("processed-data", "covid-speeches-uk.rds"))
+covid_speeches_uk_bigrams <- read_rds(here::here("processed-data", "covid-speeches-uk-bigrams.rds"))
+covid_speeches_uk_words <- read_rds(here::here("processed-data", "covid-speeches-uk-words.rds"))
+```
 
 ## Remove stop words
 
-``` r
+```{r remove-stop-words}
 covid_speeches_uk_words <- covid_speeches_uk_words %>%
   anti_join(stop_words)
 ```
 
-    ## Joining, by = "word"
-
 ## Length of speech
 
-``` r
+```{r}
 ggplot(covid_speeches_uk, aes(x = n_words)) +
   geom_density(color = ukred, fill = ukred, alpha = 0.5) +
   labs(
@@ -25,9 +55,7 @@ ggplot(covid_speeches_uk, aes(x = n_words)) +
   theme(axis.text.y = element_blank())
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
-
-``` r
+```{r}
 lm_words <- lm(n_words ~ date, data = covid_speeches_uk)
 lm_words_rsq <- glance(lm_words)$r.squared
 
@@ -42,11 +70,9 @@ covid_speeches_uk %>%
   )
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
-
 ## Word frequency
 
-``` r
+```{r fig.asp = 0.8}
 threshold <- 100
 
 covid_speeches_uk_words %>%
@@ -62,14 +88,11 @@ covid_speeches_uk_words %>%
   )
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
-
 ## Sentiment analysis
 
-“positive” isn’t really a positive word in this context. Remove and plot
-again.
+"positive" isn't really a positive word in this context. Remove and plot again.
 
-``` r
+```{r fig.asp = 0.8}
 covid_speeches_uk_words %>%
   filter(word != "positive") %>%
   inner_join(get_sentiments("bing"), by = "word") %>%
@@ -87,15 +110,13 @@ covid_speeches_uk_words %>%
   )
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
-
 ## Daily sentiments
 
 ### Lexicon: Bing
 
 Sentiments: Positive and negative.
 
-``` r
+```{r}
 covid_speeches_uk_words %>%
   filter(word != "positive") %>% 
   inner_join(get_sentiments("bing"), by = "word") %>%
@@ -115,11 +136,9 @@ covid_speeches_uk_words %>%
   theme(legend.position = "bottom")
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
+and now with a smooth curve...
 
-and now with a smooth curve…
-
-``` r
+```{r}
 covid_speeches_uk_words %>%
   filter(word != "positive") %>%
   inner_join(get_sentiments("bing"), by = "word") %>%
@@ -139,14 +158,11 @@ covid_speeches_uk_words %>%
   theme(legend.position = "bottom")
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-6-1.png" width="100%" />
-
 ### Lexicon: NRC
 
-Sentiments: rust, fear, negative, sadness, anger, surprise, positive,
-disgust, joy, and anticipation.
+Sentiments: rust, fear, negative, sadness, anger, surprise, positive, disgust, joy, and anticipation.
 
-``` r
+```{r fig.asp=0.7}
 covid_speeches_uk_words %>%
   filter(word != "positive") %>%
   inner_join(get_sentiments("nrc"), by = "word") %>%
@@ -171,9 +187,7 @@ covid_speeches_uk_words %>%
   theme_minimal(base_size = 11)
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
-
-``` r
+```{r}
 covid_speeches_uk_words %>%
   filter(word != "positive") %>%
   inner_join(get_sentiments("nrc"), by = "word") %>%
@@ -194,11 +208,9 @@ covid_speeches_uk_words %>%
   )
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
-
 ## Bigram frequency
 
-``` r
+```{r fig.asp=0.8}
 threshold <- 15
 
 covid_speeches_uk_bigrams %>%
@@ -218,13 +230,11 @@ covid_speeches_uk_bigrams %>%
   )
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
-
-## Social vs. physical distancing
+## Social vs. physical distancing
 
 They never say physical distancing!
 
-``` r
+```{r}
 covid_speeches_uk %>%
   unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
   filter(str_detect(bigram, "social dist|physical dist")) %>%
@@ -240,4 +250,3 @@ covid_speeches_uk %>%
   scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 2))
 ```
 
-<img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
