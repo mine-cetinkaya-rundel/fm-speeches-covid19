@@ -12,7 +12,8 @@ ggplot(covid_speeches_uk, aes(x = n_words)) +
     subtitle = "of UK daily briefings",
     x = "Number of words",
     y = "Density"
-  )
+  ) +
+  theme(axis.text.y = element_blank())
 ```
 
 <img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
@@ -95,7 +96,6 @@ covid_speeches_uk_words %>%
   ggplot(aes(x = date, y = sentiment)) +
   geom_line(color = "gray") +
   geom_point(aes(color = sentiment > 0), size = 2) +
-  #scale_color_manual(values = c("gray", "red")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   guides(color = FALSE) +
   labs(
@@ -180,8 +180,8 @@ covid_speeches_uk_words %>%
   facet_wrap(~ sentiment, ncol = 5) +
   labs(
     title = "Sentiment score of words in UK COVID-19 briefings over time",
-    subtitle = "Sentiment evaluated using the NRC lexicon",
-    x = "Date", y = "Sentiment score", shape = NULL, color = NULL
+    subtitle = "NRC lexicon",
+    x = "Date", y = "Sentiment score", color = NULL
   )
 ```
 
@@ -193,6 +193,10 @@ covid_speeches_uk_words %>%
 threshold <- 15
 
 covid_speeches_uk_bigrams %>%
+  mutate(
+    bigram = if_else(bigram == "care home", "care home(s)", bigram),
+    bigram = if_else(bigram == "care homes", "care home(s)", bigram)
+  ) %>%
   count(bigram, sort = TRUE) %>%
   filter(n > threshold) %>%
   ggplot(aes(y = fct_reorder(bigram, n), x = n, fill = n)) +
@@ -222,7 +226,9 @@ covid_speeches_uk %>%
   guides(color = FALSE) +
   labs(x = "Date", y = "Frequency",
        title = "Social (S) vs. physical (P) distancing",
-       subtitle = "Number of mentions over time")
+       subtitle = "Number of mentions over time") +
+  scale_color_manual(values = c(ukred, "darkgray")) +
+  scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 2))
 ```
 
 <img src="05-visualise-uk_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />

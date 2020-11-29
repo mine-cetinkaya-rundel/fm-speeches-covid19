@@ -5,6 +5,19 @@
 ## Length of speech
 
 ``` r
+ggplot(covid_speeches_scot, aes(x = n_words)) +
+  geom_density(color = scotblue, fill = scotblue, alpha = 0.5) +
+  labs(
+    title = "Distribution of number of words",
+    subtitle = "of Scotland daily briefings",
+    x = "Number of words",
+    y = "Density"
+  )
+```
+
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
+
+``` r
 lm_words <- lm(n_words ~ date, data = covid_speeches_scot)
 lm_words_rsq <- glance(lm_words)$r.squared
 
@@ -13,13 +26,13 @@ covid_speeches_scot %>%
   geom_point(color = scotblue, alpha = 0.7) +
   geom_smooth(aes(x = date, y = n_words), method = lm, formula = y ~ x, color = "darkgray") +
   labs(
-    title = "Length of FM's COVID-19 speeches",
+    title = "Length of Scotland COVID-19 speeches",
     subtitle = glue("Measured in number of words, R-squared = {percent(lm_words_rsq)}"),
     x = NULL, y = "Number of words", color = NULL, shape = NULL
   )
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-1-1.png" width="100%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
 
 ## Word frequency
 
@@ -33,13 +46,13 @@ covid_speeches_scot_words %>%
   geom_col() +
   guides(fill = FALSE) +
   labs(
-    title = "Frequency of words in FM's COVID-19 briefings",
+    title = "Frequency of words in Scotland COVID-19 briefings",
     subtitle = glue("Words occurring more than {threshold} times"),
     y = NULL, x = NULL
   )
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
 
 ## Sentiment analysis
 
@@ -56,24 +69,20 @@ covid_speeches_scot_words %>%
   guides(fill = FALSE) +
   facet_wrap(~ sentiment, scales = "free") +
   labs(
-    title = "Sentiment and frequency of words in FM's COVID-19 briefings",
-    subtitle = "Sentiment evaluated using the Bing lexicon",
+    title = "Sentiment and frequency of words in Scotland COVID-19 briefings",
+    subtitle = "Bing lexicon",
     y = NULL, x = NULL
   )
 ```
 
-<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
+<img src="04-visualise-scot_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
 “positive” isn’t really a positive word in this context. Remove and plot
 again.
 
 ``` r
-covid_speeches_scot_words <- covid_speeches_scot_words %>%
-  filter(word != "positive")
-```
-
-``` r
 covid_speeches_scot_words %>%
+  filter(word != "positive") %>%
   inner_join(get_sentiments("bing"), by = "word") %>%
   count(sentiment, word, sort = TRUE) %>%
   group_by(sentiment) %>%
@@ -83,8 +92,8 @@ covid_speeches_scot_words %>%
   guides(fill = FALSE) +
   facet_wrap(~ sentiment, scales = "free") +
   labs(
-    title = "Sentiment and frequency of words in FM's COVID-19 briefings",
-    subtitle = "Sentiment evaluated using the Bing lexicon",
+    title = "Sentiment and frequency of words in Scotland COVID-19 briefings",
+    subtitle = "Bing lexicon",
     y = NULL, x = NULL
   )
 ```
@@ -99,6 +108,7 @@ Sentiments: Positive and negative.
 
 ``` r
 covid_speeches_scot_words %>%
+  filter(word != "positive") %>% 
   inner_join(get_sentiments("bing"), by = "word") %>%
   count(date, sentiment) %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
@@ -106,14 +116,12 @@ covid_speeches_scot_words %>%
   ggplot(aes(x = date, y = sentiment)) +
   geom_line(color = "gray") +
   geom_point(aes(color = sentiment > 0), size = 2) +
-  #scale_color_manual(values = c("gray", "red")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in FM's COVID-19 briefings",
-    subtitle = "Sentiment score = Number of words with 
-positive - negative sentiments, Bing lexicon",
-    x = "Date", y = "Sentiment score"
+    title = "Daily sentiment score of words in Scotland COVID-19 briefings",
+    subtitle = "Bing lexicon",
+    x = "Date", y = "Sentiment score (positive - negative)"
   ) +
   theme(legend.position = "bottom")
 ```
@@ -124,6 +132,7 @@ and now with a smooth curve…
 
 ``` r
 covid_speeches_scot_words %>%
+  filter(word != "positive") %>%
   inner_join(get_sentiments("bing"), by = "word") %>%
   count(date, sentiment) %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
@@ -131,14 +140,12 @@ covid_speeches_scot_words %>%
   ggplot(aes(x = date, y = sentiment)) +
   geom_smooth(color = "gray", method = "lm", formula = y ~ x) +
   geom_point(aes(color = sentiment > 0), size = 1) +
-  #scale_color_manual(values = c("gray", "red")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in FM's COVID-19 briefings",
-    subtitle = "Sentiment score = Number of words with 
-positive - negative sentiments, Bing lexicon",
-    x = "Date", y = "Sentiment score"
+    title = "Daily sentiment score of words in Scotland COVID-19 briefings",
+    subtitle = "Bing lexicon",
+    x = "Date", y = "Sentiment score (positive - negative)"
   ) +
   theme(legend.position = "bottom")
 ```
@@ -152,6 +159,7 @@ disgust, joy, and anticipation.
 
 ``` r
 covid_speeches_scot_words %>%
+  filter(word != "positive") %>%
   inner_join(get_sentiments("nrc"), by = "word") %>%
   mutate(
     sentiment = fct_relevel(sentiment, "positive", "anticipation", "joy", "surprise", "trust",
@@ -166,8 +174,8 @@ covid_speeches_scot_words %>%
   guides(fill = FALSE) +
   facet_wrap(~ sentiment, scales = "free_y", ncol = 5) +
   labs(
-    title = "Sentiment and frequency of words in FM's COVID-19 briefings",
-    subtitle = "Sentiment evaluated using the NRC lexicon",
+    title = "Sentiment and frequency of words in Scotland COVID-19 briefings",
+    subtitle = "NRC lexicon",
     y = NULL, x = NULL
   ) +
   scale_x_continuous(breaks = c(0, 1000)) +
@@ -190,9 +198,9 @@ covid_speeches_scot_words %>%
   guides(color = FALSE) +
   facet_wrap(~ sentiment, ncol = 5) +
   labs(
-    title = "Sentiment score of words in FM's COVID-19 briefings over time",
-    subtitle = "Sentiment evaluated using the NRC lexicon",
-    x = "Date", y = "Sentiment score", shape = NULL, color = NULL
+    title = "Sentiment score of words in Scotland COVID-19 briefings over time",
+    subtitle = "NRC lexicon",
+    x = "Date", y = "Sentiment score", color = NULL
   )
 ```
 
@@ -201,19 +209,21 @@ covid_speeches_scot_words %>%
 ## Bigram frequency
 
 ``` r
+threshold <- 75
+
 covid_speeches_scot_bigrams %>%
   mutate(
     bigram = if_else(bigram == "care home", "care home(s)", bigram),
     bigram = if_else(bigram == "care homes", "care home(s)", bigram)
   ) %>%
   count(bigram, sort = TRUE) %>%
-  filter(n > 60) %>%
+  filter(n > threshold) %>%
   ggplot(aes(y = fct_reorder(bigram, n), x = n, fill = n)) +
   geom_col() +
   guides(fill = FALSE) +
   labs(
-    title = "Frequency of bigrams in FM's COVID-19 briefings",
-    subtitle = "Bigrams occurring more than 60 times",
+    title = "Frequency of bigrams in Scotland COVID-19 briefings",
+    subtitle = glue("Bigrams occurring more than {threshold} times"),
     y = NULL, x = NULL
   )
 ```
@@ -224,15 +234,6 @@ covid_speeches_scot_bigrams %>%
 
 ``` r
 covid_speeches_scot %>%
-  # make sure COVID-19 (and all its various spellings) don't get split
-  # tidytext doesn't remove underscores
-  # https://stackoverflow.com/questions/58281091/preserve-hyphenated-words-in-ngrams-analysis-with-tidytext
-  mutate(
-    text = str_replace_all(text, "COVID-19", "COVID_19"),
-    text = str_replace_all(text, "COVID 19", "COVID_19"),
-    text = str_replace_all(text, "Covid-19", "COVID_19"),
-    text = str_replace_all(text, "Covid 19", "COVID_19")
-  ) %>%
   unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
   filter(str_detect(bigram, "social dist|physical dist")) %>%
   mutate(soc_phys = if_else(str_detect(bigram, "social"), "S", "P")) %>%
