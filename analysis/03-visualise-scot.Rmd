@@ -191,7 +191,7 @@ covid_speeches_scot_words %>%
 
 ### Lexicon: NRC
 
-Sentiments: rust, fear, negative, sadness, anger, surprise, positive, disgust, joy, and anticipation.
+Sentiments: trust, fear, negative, sadness, anger, surprise, positive, disgust, joy, and anticipation.
 
 ```{r fig.asp=0.7}
 covid_speeches_scot_words %>%

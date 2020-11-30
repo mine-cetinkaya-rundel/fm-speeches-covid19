@@ -18,11 +18,7 @@ covid_speeches_scot <- covid_speeches_scot %>%
     # weekend/weekday
     weekend = if_else(wday %in% c("Sat", "Sun"), "Weekend", "Weekday"),
     # speaker
-    speaker = case_when(
-      str_detect(abstract, "First Minister")   ~ "First Minister",
-      str_detect(abstract, "Health Secretary") ~ "Health Secretary",
-      TRUE                                     ~ NA_character_
-    )
+    speaker = if_else(str_detect(abstract, "First Minister"), "First Minister", "Other")
   ) %>%
   # count words
   rowwise() %>%
