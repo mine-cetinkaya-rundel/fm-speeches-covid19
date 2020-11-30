@@ -34,13 +34,6 @@ covid_speeches_uk_bigrams <- read_rds(here::here("processed-data", "covid-speech
 covid_speeches_uk_words <- read_rds(here::here("processed-data", "covid-speeches-uk-words.rds"))
 ```
 
-## Remove stop words
-
-```{r remove-stop-words}
-covid_speeches_uk_words <- covid_speeches_uk_words %>%
-  anti_join(stop_words)
-```
-
 ## Length of speech
 
 ```{r}
@@ -68,6 +61,13 @@ covid_speeches_uk %>%
     subtitle = glue("Measured in number of words, R-squared = {percent(lm_words_rsq)}"),
     x = NULL, y = "Number of words", color = NULL, shape = NULL
   )
+```
+
+## Remove stop words
+
+```{r remove-stop-words}
+covid_speeches_uk_words <- covid_speeches_uk_words %>%
+  anti_join(stop_words)
 ```
 
 ## Word frequency

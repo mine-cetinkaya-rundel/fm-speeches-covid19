@@ -1,15 +1,6 @@
 06-visualise-uk
 ================
-2020-11-29
-
-## Remove stop words
-
-``` r
-covid_speeches_uk_words <- covid_speeches_uk_words %>%
-  anti_join(stop_words)
-```
-
-    ## Joining, by = "word"
+2020-11-30
 
 ## Length of speech
 
@@ -43,6 +34,15 @@ covid_speeches_uk %>%
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
+
+## Remove stop words
+
+``` r
+covid_speeches_uk_words <- covid_speeches_uk_words %>%
+  anti_join(stop_words)
+```
+
+    ## Joining, by = "word"
 
 ## Word frequency
 

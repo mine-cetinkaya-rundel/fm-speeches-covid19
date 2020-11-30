@@ -1,15 +1,6 @@
 05-visualise-scot
 ================
-2020-11-29
-
-## Remove stop words
-
-``` r
-covid_speeches_scot_words <- covid_speeches_scot_words %>%
-  anti_join(stop_words)
-```
-
-    ## Joining, by = "word"
+2020-11-30
 
 ## Length of speech
 
@@ -47,6 +38,28 @@ covid_speeches_scot %>%
 ## Word frequency
 
 ``` r
+covid_speeches_scot_words %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 1000) %>%
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = n)) +
+  geom_col() +
+  guides(fill = FALSE)
+```
+
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
+
+## Remove stop words
+
+``` r
+covid_speeches_scot_words <- covid_speeches_scot_words %>%
+  anti_join(stop_words)
+```
+
+    ## Joining, by = "word"
+
+## Word frequency again
+
+``` r
 threshold <- 400
 
 covid_speeches_scot_words %>%
@@ -62,7 +75,7 @@ covid_speeches_scot_words %>%
   )
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-3-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
 ## Sentiment analysis
 
@@ -85,7 +98,7 @@ covid_speeches_scot_words %>%
   )
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
 
 “positive” isn’t really a positive word in this context. Remove and plot
 again.
@@ -108,7 +121,7 @@ covid_speeches_scot_words %>%
   )
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-6-1.png" width="100%" />
 
 ## Daily sentiments
 
@@ -136,7 +149,7 @@ covid_speeches_scot_words %>%
   theme(legend.position = "bottom")
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-6-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
 
 and now with a smooth curve…
 
@@ -160,7 +173,7 @@ covid_speeches_scot_words %>%
   theme(legend.position = "bottom")
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
 
 ### Lexicon: NRC
 
@@ -192,7 +205,7 @@ covid_speeches_scot_words %>%
   theme_minimal(base_size = 11)
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
 
 ``` r
 covid_speeches_scot_words %>%
@@ -214,7 +227,7 @@ covid_speeches_scot_words %>%
   )
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-9-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
 
 ## Bigram frequency
 
@@ -238,7 +251,7 @@ covid_speeches_scot_bigrams %>%
   )
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
 
 ## Social vs. physical distancing
 
@@ -258,4 +271,4 @@ covid_speeches_scot %>%
   scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 2))
 ```
 
-<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
+<img src="05-visualise-scot_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />

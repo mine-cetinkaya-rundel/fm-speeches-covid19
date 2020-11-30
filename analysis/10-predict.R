@@ -234,3 +234,9 @@ final_fit %>%
   roc_curve(truth = origin, .pred_Scotland) %>%
   autoplot()
 
+# predict ----------------------------------------------------------------------
+
+predict(
+  wflow_spec_final %>% fit(covid_train), 
+  new_data = tibble(sentence = "We will defeat this virus.")
+)

@@ -35,13 +35,6 @@ covid_speeches_scot_bigrams <- read_rds(here::here("processed-data", "covid-spee
 covid_speeches_scot_words <- read_rds(here::here("processed-data", "covid-speeches-scot-words.rds"))
 ```
 
-## Remove stop words
-
-```{r remove-stop-words}
-covid_speeches_scot_words <- covid_speeches_scot_words %>%
-  anti_join(stop_words)
-```
-
 ## Length of speech
 
 ```{r}
@@ -72,6 +65,24 @@ covid_speeches_scot %>%
 ```
 
 ## Word frequency
+
+```{r fig.asp = 0.8}
+covid_speeches_scot_words %>%
+  count(word, sort = TRUE) %>%
+  filter(n > 1000) %>%
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = n)) +
+  geom_col() +
+  guides(fill = FALSE)
+```
+
+## Remove stop words
+
+```{r remove-stop-words}
+covid_speeches_scot_words <- covid_speeches_scot_words %>%
+  anti_join(stop_words)
+```
+
+## Word frequency again
 
 ```{r fig.asp = 0.8}
 threshold <- 400
