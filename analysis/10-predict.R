@@ -1,5 +1,7 @@
 # load packages ----------------------------------------------------------------
 
+# https://emilhvitfeldt.github.io/useR2020-text-modeling-tutorial/#133
+  
 library(tidyverse)
 library(tidymodels)
 library(tidytext)
