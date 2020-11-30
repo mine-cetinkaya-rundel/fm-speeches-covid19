@@ -4,7 +4,6 @@ library(tidyverse)
 library(tidymodels)
 library(tidytext)
 library(textrecipes)
-library(SnowballC)
 library(here)
 
 # set theme for plots to minimal -----------------------------------------------
@@ -18,11 +17,10 @@ ukred <- "#D00C27"
 
 # read data --------------------------------------------------------------------
 
-covid_speeches_scot <- read_rds(here::here("processed-data/covid_speeches_scot.rds")) %>%
-  mutate(origin = "Scotland") %>%
-  select(-location, -speaker) # these don't exist in the UK data
+covid_speeches_scot <- read_rds(here::here("data/covid-speeches-scot.rds")) %>%
+  mutate(origin = "Scotland")
   
-covid_speeches_uk <- read_rds(here::here("processed-data/covid_speeches_uk.rds")) %>%
+covid_speeches_uk <- read_rds(here::here("data/covid-speeches-uk.rds")) %>%
   mutate(origin = "UK")
 
 covid_speeches <- bind_rows(covid_speeches_scot, covid_speeches_uk)
@@ -54,6 +52,7 @@ covid_rec <- recipe(origin ~ sentence, data = covid_train) %>%
   step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %>%
   step_tokenfilter(sentence, max_tokens = tune(), min_times = 5) %>%
   step_tfidf(sentence)
+
 
 # model ------------------------------------------------------------------------
 
@@ -88,7 +87,9 @@ lasso_rs <- tune_grid(
   control = control_grid(save_pred = TRUE)
 )
 
-write_rds(lasso_rs, here::here("model-output", "lasso_rs.rds"))
+#write_rds(lasso_rs, here::here("model-output", "lasso_rs.rds"), compress = "bz2")
+
+lasso_rs <- read_rds(here::here("model-output", "lasso_rs.rds"))
 
 collect_metrics(lasso_rs)
 
@@ -125,6 +126,10 @@ vi_data <- wflow_spec_final %>%
   mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %>%
   filter(Importance != 0)
 
+#write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
+
+vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
+
 vi_data %>%
   mutate(
     Importance = abs(Importance)
@@ -133,7 +138,7 @@ vi_data %>%
   group_by(Sign) %>%
   top_n(20, Importance) %>%
   ungroup() %>%
-  mutate(Sign = factor(Sign, c("POS", "NEG"), c("UK", "Scotkabd"))) %>%
+  mutate(Sign = factor(Sign, c("POS", "NEG"), c("UK", "Scotland"))) %>%
   ggplot(aes(
     x = Importance,
     y = fct_reorder(Variable, Importance),
@@ -215,6 +220,11 @@ final_fit <- last_fit(
   wflow_spec_final, 
   covid_split
 )
+
+#write_rds(final_fit, here::here("model-output", "final_fit.rds"), compress = "bz2")
+
+final_fit <- read_rds(here::here("model-output", "final_fit.rds"))
+
 
 final_fit %>%
   collect_metrics()
