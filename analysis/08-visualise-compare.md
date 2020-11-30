@@ -1,20 +1,6 @@
-07-visualise-compare
+08-visualise-compare
 ================
-2020-11-29
-
-``` r
-covid_speeches_scot_words <- covid_speeches_scot_words %>%
-  mutate(origin = "Scotland")
-
-covid_speeches_uk_words <- covid_speeches_uk_words %>%
-  mutate(origin = "UK")
-```
-
-``` r
-covid_speeches_words <- covid_speeches_scot_words %>%
-  select(-location, -speaker) %>% # uk data doesn't have these
-  bind_rows(covid_speeches_uk_words)
-```
+2020-11-30
 
 ## Basic comparison
 
@@ -26,11 +12,10 @@ covid_speeches_words %>%
   summarise(
     n_speeches = max(speech_no),
     n_words    = n(),
-    avg_words  = n_words / n_speeches
+    avg_words  = n_words / n_speeches,
+    .groups = "drop"
     )
 ```
-
-    ## `summarise()` has ungrouped output. You can override using the `.groups` argument.
 
     ## # A tibble: 2 x 4
     ##   origin   n_speeches n_words avg_words
@@ -53,9 +38,14 @@ covid_speeches_words %>%
   theme(axis.text.y = element_blank())
 ```
 
-<img src="07-visualise-compare_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
+<img src="08-visualise-compare_files/figure-gfm/unnamed-chunk-2-1.png" width="100%" />
 
 ## TF-IDF
+
+The statistic tf-idf is intended to measure how important a word is to a
+document in a collection (or corpus) of documents, for example, to one
+novel in a collection of novels or to one website in a collection of
+websites.[1]
 
 Calculate tf-idf
 
@@ -105,9 +95,12 @@ covid_speeches_tf_ifd %>%
   labs(y = NULL, x = "tf-idf", title = "Common words in COVID briefings") +
   facet_wrap(~origin, ncol = 2, scales = "free") +
   scale_fill_manual(values = c(scotblue, ukred)) +
-  scale_x_continuous(breaks = c(0, 0.0005, 0.001), labels = label_number())
+  scale_x_continuous(breaks = c(0, 0.00015, 0.0003), labels = label_number())
 ```
 
     ## Selecting by tf_idf
 
-<img src="07-visualise-compare_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
+<img src="08-visualise-compare_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
+
+[1] Source: [Text Mining with
+R](https://www.tidytextmining.com/tfidf.html)

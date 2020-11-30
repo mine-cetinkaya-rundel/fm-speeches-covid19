@@ -1,5 +1,5 @@
 ---
-title: "07-visualise-compare"
+title: "08-visualise-compare"
 date: "`r Sys.Date()`"
 output: github_document
 ---
@@ -30,23 +30,7 @@ knitr::opts_chunk$set(
 )
 
 # read data
-covid_speeches_scot_words <- read_rds(here::here("processed-data", "covid-speeches-scot-words.rds"))
-
-covid_speeches_uk_words <- read_rds(here::here("processed-data", "covid-speeches-uk-words.rds"))
-```
-
-```{r assign-origin}
-covid_speeches_scot_words <- covid_speeches_scot_words %>%
-  mutate(origin = "Scotland")
-
-covid_speeches_uk_words <- covid_speeches_uk_words %>%
-  mutate(origin = "UK")
-```
-
-```{r bind-data}
-covid_speeches_words <- covid_speeches_scot_words %>%
-  select(-location, -speaker) %>% # uk data doesn't have these
-  bind_rows(covid_speeches_uk_words)
+covid_speeches_words <- read_rds(here::here("processed-data", "covid-speeches-words.rds"))
 ```
 
 ## Basic comparison
@@ -59,7 +43,8 @@ covid_speeches_words %>%
   summarise(
     n_speeches = max(speech_no),
     n_words    = n(),
-    avg_words  = n_words / n_speeches
+    avg_words  = n_words / n_speeches,
+    .groups = "drop"
     )
 ```
 
@@ -79,6 +64,8 @@ covid_speeches_words %>%
 ```
 
 ## TF-IDF
+
+The statistic tf-idf is intended to measure how important a word is to a document in a collection (or corpus) of documents, for example, to one novel in a collection of novels or to one website in a collection of websites.^[Source: [Text Mining with R](https://www.tidytextmining.com/tfidf.html)]
 
 Calculate tf-idf
 
@@ -112,5 +99,5 @@ covid_speeches_tf_ifd %>%
   labs(y = NULL, x = "tf-idf", title = "Common words in COVID briefings") +
   facet_wrap(~origin, ncol = 2, scales = "free") +
   scale_fill_manual(values = c(scotblue, ukred)) +
-  scale_x_continuous(breaks = c(0, 0.0005, 0.001), labels = label_number())
+  scale_x_continuous(breaks = c(0, 0.00015, 0.0003), labels = label_number())
 ```
