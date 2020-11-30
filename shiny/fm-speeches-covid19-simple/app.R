@@ -9,13 +9,13 @@ library(plotly)
 
 # read data --------------------------------------------------------------------
 
-covid_speeches_words <- read_rds(here::here("processed-data", "covid-speeches-words.rds"))
+covid_speeches_words <- read_rds("covid-speeches-words.rds")
 
 # ui ---------------------------------------------------------------------------
 
 ui <- fluidPage(
   titlePanel("Scotland and UK COVID-19 Speeches"),
-  
+
   sidebarLayout(
     sidebarPanel(
       selectInput(
