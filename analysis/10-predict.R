@@ -20,7 +20,8 @@ ukred <- "#D00C27"
 # read data --------------------------------------------------------------------
 
 covid_speeches_scot <- read_rds(here::here("data/covid-speeches-scot.rds")) %>%
-  mutate(origin = "Scotland")
+  mutate(origin = "Scotland") %>%
+  select(-location)
   
 covid_speeches_uk <- read_rds(here::here("data/covid-speeches-uk.rds")) %>%
   mutate(origin = "UK")
