@@ -50,10 +50,15 @@ covid_test  <- testing(covid_split)
 # recipe -----------------------------------------------------------------------
 
 covid_rec <- recipe(origin ~ sentence, data = covid_train) %>%
+  # tokenize into words
   step_tokenize(sentence, token = "words") %>%
+  # filter out stop words
   step_stopwords(sentence) %>%
+  # all the 1-grams followed by all the 2-grams followed by all the 3-grams
   step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %>%
+  # set min times word can appear before getting removed and tune max tokens
   step_tokenfilter(sentence, max_tokens = tune(), min_times = 5) %>%
+  # calculate tf-idf
   step_tfidf(sentence)
 
 
