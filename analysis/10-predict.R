@@ -1,4 +1,4 @@
-# load packages ----------------------------------------------------------------
+ # load packages ----------------------------------------------------------------
 
 # https://emilhvitfeldt.github.io/useR2020-text-modeling-tutorial/#133
   
@@ -158,16 +158,16 @@ param_grid <- grid_regular(
 
 # train models with all possible values of tuning parameters
 set.seed(24)
-covid_fit_rs_tune <- tune_grid(
-  covid_wflow_tune,
-  resamples = covid_folds,
-  grid = param_grid, 
-  control = control_grid(save_pred = TRUE)
-)
+#covid_fit_rs_tune <- tune_grid(
+#  covid_wflow_tune,
+#  resamples = covid_folds,
+#  grid = param_grid, 
+#  control = control_grid(save_pred = TRUE)
+#)
 
-write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "bz2")
+#write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "bz2")
 
-#covid_fit_rs_tune <- read_rds(here::here("model-output", "covid_fit_rs_tune.rds"))
+covid_fit_rs_tune <- read_rds(here::here("model-output", "covid_fit_rs_tune.rds"))
 
 collect_metrics(covid_fit_rs_tune)
 
@@ -197,16 +197,16 @@ covid_wflow_final <- finalize_workflow(covid_wflow_tune, best_roc_auc)
 
 library(vip)
 
-vi_data <- covid_wflow_final %>%
-  fit(covid_train) %>%
-  pull_workflow_fit() %>%
-  vi(lambda = best_roc_auc$penalty) %>%
-  mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %>%
-  filter(Importance != 0)
+#vi_data <- covid_wflow_final %>%
+#  fit(covid_train) %>%
+#  pull_workflow_fit() %>%
+#  vi(lambda = best_roc_auc$penalty) %>%
+#  mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %>%
+#  filter(Importance != 0)
+#
+#write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
 
-write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
-
-#vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
+vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
 
 vi_data %>%
   mutate(
@@ -232,14 +232,14 @@ vi_data %>%
 
 # final fit --------------------------------------------------------------------
 
-covid_fit_final <- last_fit(
-  covid_wflow_final, 
-  covid_split
-)
+#covid_fit_final <- last_fit(
+#  covid_wflow_final, 
+#  covid_split
+#)
 
-write_rds(covid_fit_final, here::here("model-output", "covid_fit_final.rds"), compress = "bz2")
+#write_rds(covid_fit_final, here::here("model-output", "covid_fit_final.rds"), compress = "bz2")
 
-#covid_fit_final <- read_rds(here::here("model-output", "covid_fit_final.rds"))
+covid_fit_final <- read_rds(here::here("model-output", "covid_fit_final.rds"))
 
 covid_fit_final %>%
   collect_metrics()
