@@ -21,12 +21,16 @@ ukred <- "#D00C27"
 
 covid_speeches_scot <- read_rds(here::here("data/covid-speeches-scot.rds")) %>%
   mutate(origin = "Scotland") %>%
-  select(-location)
+  select(-location, -title, -abstract) %>%
+  rownames_to_column(var = "speech_id")
   
 covid_speeches_uk <- read_rds(here::here("data/covid-speeches-uk.rds")) %>%
-  mutate(origin = "UK")
+  mutate(origin = "UK") %>%
+  select(-title, -abstract) %>%
+  rownames_to_column(var = "speech_id")
 
-covid_speeches <- bind_rows(covid_speeches_scot, covid_speeches_uk)
+covid_speeches <- bind_rows(covid_speeches_scot, covid_speeches_uk) %>%
+  mutate(origin = as.factor(origin))
 
 # separate into sentences ------------------------------------------------------
 
@@ -47,7 +51,12 @@ covid_split <- initial_split(covid_speeches_sentences, strata = origin)
 covid_train <- training(covid_split)
 covid_test  <- testing(covid_split)
 
-# recipe -----------------------------------------------------------------------
+# specify model ----------------------------------------------------------------
+
+lasso_mod <- logistic_reg(penalty = 0.005, mixture = 1) %>%
+  set_engine("glmnet")
+
+# build recipe -----------------------------------------------------------------
 
 covid_rec <- recipe(origin ~ sentence, data = covid_train) %>%
   # tokenize into words
@@ -56,63 +65,34 @@ covid_rec <- recipe(origin ~ sentence, data = covid_train) %>%
   step_stopwords(sentence) %>%
   # all the 1-grams followed by all the 2-grams followed by all the 3-grams
   step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %>%
-  # set min times word can appear before getting removed and tune max tokens
-  step_tokenfilter(sentence, max_tokens = tune(), min_times = 5) %>%
+  # keep the 500 most frequent words to avoid creating too many variables 
+  step_tokenfilter(sentence, max_tokens = 500) %>%
   # calculate tf-idf
   step_tfidf(sentence)
 
+# build workflow ---------------------------------------------------------------
 
-# model ------------------------------------------------------------------------
-
-lasso_spec <- logistic_reg(penalty = tune(), mixture = 1) %>%
-  set_mode("classification") %>%
-  set_engine("glmnet")
+covid_wflow <- workflow() %>%
+  add_model(lasso_mod) %>%
+  add_recipe(covid_rec)
 
 # cv ---------------------------------------------------------------------------
 
+set.seed(1234)
 covid_folds <- vfold_cv(covid_train, v = 10, strata = origin)
 
-# workflow ---------------------------------------------------------------------
+# fit resamples ----------------------------------------------------------------
 
-covid_wflow <- workflow() %>%
-  add_recipe(covid_rec) %>%
-  add_model(lasso_spec)
+covid_fit_rs <- covid_wflow %>%
+  fit_resamples(
+    covid_folds,
+    control = control_resamples(save_pred = TRUE)
+  )
 
-# tune -------------------------------------------------------------------------
+covid_train_metrics <- collect_metrics(covid_fit_rs)
+covid_train_pred <- collect_predictions(covid_fit_rs)
 
-# A grid of possible hyperparameters
-param_grid <- grid_regular(
-  penalty(range = c(-4, 0)),
-  max_tokens(range = c(500, 2000)),
-  levels = 6
-)
-
-set.seed(42)
-lasso_rs <- tune_grid(
-  covid_wflow,
-  resamples = covid_folds,
-  grid = param_grid, 
-  control = control_grid(save_pred = TRUE)
-)
-
-#write_rds(lasso_rs, here::here("model-output", "lasso_rs.rds"), compress = "bz2")
-
-lasso_rs <- read_rds(here::here("model-output", "lasso_rs.rds"))
-
-collect_metrics(lasso_rs)
-
-autoplot(lasso_rs)
-
-lasso_rs %>%
-  show_best("roc_auc")
-
-best_roc_auc <- select_best(lasso_rs, "roc_auc")
-
-best_roc_auc
-
-# evaluate best model ----------------------------------------------------------
-
-collect_predictions(lasso_rs, parameters = best_roc_auc) %>%
+covid_train_pred %>%
   group_by(id) %>%
   roc_curve(truth = origin, .pred_Scotland) %>%
   autoplot() +
@@ -121,22 +101,112 @@ collect_predictions(lasso_rs, parameters = best_roc_auc) %>%
     subtitle = "Each resample fold is shown in a different color"
   )
 
-wflow_spec_final <- finalize_workflow(covid_wflow, best_roc_auc)
+# make predictions for test data -----------------------------------------------
+
+covid_fit <- covid_wflow %>%
+  fit(data = covid_train)
+
+covid_test_pred <- predict(covid_fit, new_data = covid_test, type = "prob") %>%
+  bind_cols(covid_test %>% select(origin, speech_id, sentence))
+
+covid_test_pred %>%
+  roc_curve(truth = origin, .pred_Scotland) %>%
+  autoplot()
+
+covid_test_pred %>%
+  roc_auc(truth = origin, .pred_Scotland)
+
+covid_test_pred %>% 
+  filter(origin == "Scotland", .pred_UK > 0.5)
+
+# what decisions did we enforce? -----------------------------------------------
+
+# step_tokenfilter(sentence, max_tokens = 500) -- why 500 for max_tokens?
+# logistic_reg(penalty = 0.005, mixture = 1) -- why 0.005 for penalty?
+
+# tune -------------------------------------------------------------------------
+
+# specify model 
+
+lasso_mod_tune <- logistic_reg(penalty = tune(), mixture = 1) %>%
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+# build recipe 
+
+covid_rec_tune <- recipe(origin ~ sentence, data = covid_train) %>%
+  step_tokenize(sentence, token = "words") %>%
+  step_stopwords(sentence) %>%
+  step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %>%
+  # keep the ?? most frequent words to avoid creating too many variables 
+  step_tokenfilter(sentence, max_tokens = tune(), min_times = 5) %>%
+  step_tfidf(sentence)
+
+# build workflow 
+
+covid_wflow_tune <- workflow() %>%
+  add_model(lasso_mod_tune) %>%
+  add_recipe(covid_rec_tune)
+
+# grid of possible hyperparameters
+
+param_grid <- grid_regular(
+  penalty(range = c(-4, 0)),
+  max_tokens(range = c(500, 2000)),
+  levels = 5
+)
+
+# train models with all possible values of tuning parameters
+set.seed(24)
+covid_fit_rs_tune <- tune_grid(
+  covid_wflow_tune,
+  resamples = covid_folds,
+  grid = param_grid, 
+  control = control_grid(save_pred = TRUE)
+)
+
+write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "bz2")
+
+#covid_fit_rs_tune <- read_rds(here::here("model-output", "covid_fit_rs_tune.rds"))
+
+collect_metrics(covid_fit_rs_tune)
+
+autoplot(covid_fit_rs_tune)
+
+covid_fit_rs_tune %>%
+  show_best("roc_auc")
+
+best_roc_auc <- select_best(covid_fit_rs_tune, "roc_auc")
+
+best_roc_auc
+
+# evaluate best model ----------------------------------------------------------
+
+collect_predictions(covid_fit_rs_tune, parameters = best_roc_auc) %>%
+  group_by(id) %>%
+  roc_curve(truth = origin, .pred_Scotland) %>%
+  autoplot() +
+  labs(
+    title = "ROC curve for Scotland & UK COVID speeches",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+
+covid_wflow_final <- finalize_workflow(covid_wflow_tune, best_roc_auc)
 
 # variable importance ----------------------------------------------------------
 
 library(vip)
 
-vi_data <- wflow_spec_final %>%
+vi_data <- covid_wflow_final %>%
   fit(covid_train) %>%
   pull_workflow_fit() %>%
   vi(lambda = best_roc_auc$penalty) %>%
   mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %>%
   filter(Importance != 0)
 
-#write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
+write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
 
-vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
+#vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
 
 vi_data %>%
   mutate(
@@ -160,91 +230,21 @@ vi_data %>%
     y = NULL
   )
 
-# sample sentences -------------------------------------------------------------
-
-max_imp <- log(max(abs(vi_data$Importance)))
-log_neg <- function(x) {
-  sign(x) * log(abs(x))
-}
-range01 <- function(x) {
-  (log_neg(x) + (max_imp)) / (max_imp + max_imp)
-}
-color_fun <- scales::colour_ramp(colors = c(scotblue, ukred))
-highlighter <- function(x, sign) {
-  if(is.na(sign)) {
-    htmltools::span(x)
-  } else {
-    htmltools::span(htmltools::tags$em(x), style = glue::glue('color:{color_fun(range01(sign))};'))
-  }
-}
-
-# Scotland 1
-
-covid_train %>%
-  filter(origin == "Scotland", nchar(sentence) < 800 & nchar(sentence) > 400) %>%
-  slice(1) %>%
-  tidytext::unnest_tokens(words, sentence) %>%
-  left_join(vi_data, by = c("words" = "Variable")) %>%
-  mutate(words = map2(words, Importance, highlighter)) %>%
-  pull(words) %>%
-  htmltools::div()
-
-# Scotland 2
-
-covid_train %>%
-  filter(origin == "Scotland", nchar(sentence) < 800 & nchar(sentence) > 400) %>%
-  slice(2) %>%
-  tidytext::unnest_tokens(words, sentence) %>%
-  left_join(vi_data, by = c("words" = "Variable")) %>%
-  mutate(words = map2(words, Importance, highlighter)) %>%
-  pull(words) %>%
-  htmltools::div()
-
-# UK 1
-
-covid_train %>%
-  filter(origin == "UK", nchar(sentence) < 800 & nchar(sentence) > 400) %>%
-  slice(1) %>%
-  tidytext::unnest_tokens(words, sentence) %>%
-  left_join(vi_data, by = c("words" = "Variable")) %>%
-  mutate(words = map2(words, Importance, highlighter)) %>%
-  pull(words) %>%
-  htmltools::div()
-
-# UK 2
-
-covid_train %>%
-  filter(origin == "UK", nchar(sentence) < 800 & nchar(sentence) > 400) %>%
-  slice(2) %>%
-  tidytext::unnest_tokens(words, sentence) %>%
-  left_join(vi_data, by = c("words" = "Variable")) %>%
-  mutate(words = map2(words, Importance, highlighter)) %>%
-  pull(words) %>%
-  htmltools::div()
-
 # final fit --------------------------------------------------------------------
 
-final_fit <- last_fit(
-  wflow_spec_final, 
+covid_fit_final <- last_fit(
+  covid_wflow_final, 
   covid_split
 )
 
-#write_rds(final_fit, here::here("model-output", "final_fit.rds"), compress = "bz2")
+write_rds(covid_fit_final, here::here("model-output", "covid_fit_final.rds"), compress = "bz2")
 
-final_fit <- read_rds(here::here("model-output", "final_fit.rds"))
+#covid_fit_final <- read_rds(here::here("model-output", "covid_fit_final.rds"))
 
-
-final_fit %>%
+covid_fit_final %>%
   collect_metrics()
 
-final_fit %>%
+covid_fit_final %>%
   collect_predictions() %>%
   roc_curve(truth = origin, .pred_Scotland) %>%
   autoplot()
-
-# predict ----------------------------------------------------------------------
-
-predict(
-  wflow_spec_final %>% fit(covid_train), 
-  new_data = tibble(sentence = "We will defeat this virus.")
-)
