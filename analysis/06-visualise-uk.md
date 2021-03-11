@@ -1,6 +1,6 @@
 06-visualise-uk
 ================
-2020-11-30
+2021-03-11
 
 ## Length of speech
 
@@ -241,3 +241,17 @@ covid_speeches_uk %>%
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
+
+## Vaccines
+
+``` r
+covid_speeches_uk_words %>%
+  filter(str_detect(word, "[Vv]accin")) %>%
+  count(date) %>%
+  ggplot(aes(x = date, y = n)) +
+  geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = 'Number of times "vaccine" is mentioned in speech')
+```
+
+<img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />

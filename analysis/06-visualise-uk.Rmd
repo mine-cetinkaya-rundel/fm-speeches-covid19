@@ -73,7 +73,7 @@ covid_speeches_uk_words <- covid_speeches_uk_words %>%
 ## Word frequency
 
 ```{r fig.asp = 0.8}
-threshold <- 100
+threshold <- 75
 
 covid_speeches_uk_words %>%
   count(word, sort = TRUE) %>%
@@ -250,3 +250,14 @@ covid_speeches_uk %>%
   scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 2))
 ```
 
+## Vaccines
+
+```{r dev="ragg_png"}
+covid_speeches_uk_words %>%
+  filter(str_detect(word, "[Vv]accin")) %>%
+  count(date) %>%
+  ggplot(aes(x = date, y = n)) +
+  geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = 'Number of times "vaccine" is mentioned in speech')
+```

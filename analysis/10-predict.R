@@ -157,7 +157,7 @@ param_grid <- grid_regular(
 )
 
 # train models with all possible values of tuning parameters
-set.seed(24)
+#set.seed(24)
 #covid_fit_rs_tune <- tune_grid(
 #  covid_wflow_tune,
 #  resamples = covid_folds,
@@ -165,7 +165,7 @@ set.seed(24)
 #  control = control_grid(save_pred = TRUE)
 #)
 
-#write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "bz2")
+write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "bz2")
 
 covid_fit_rs_tune <- read_rds(here::here("model-output", "covid_fit_rs_tune.rds"))
 
@@ -203,8 +203,8 @@ library(vip)
 #  vi(lambda = best_roc_auc$penalty) %>%
 #  mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %>%
 #  filter(Importance != 0)
-#
-#write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
+
+write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
 
 vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
 
@@ -214,18 +214,18 @@ vi_data %>%
   ) %>%
   filter(Importance != 0) %>%
   group_by(Sign) %>%
-  top_n(20, Importance) %>%
+  slice_head(n = 20) %>%
   ungroup() %>%
-  mutate(Sign = factor(Sign, c("POS", "NEG"), c("UK", "Scotland"))) %>%
+  mutate(pred_origin = if_else(Sign == "POS", "UK", "Scotland")) %>% 
   ggplot(aes(
     x = Importance,
     y = fct_reorder(Variable, Importance),
-    fill = Sign
+    fill = pred_origin
   )) +
   geom_col(show.legend = FALSE) +
   scale_x_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = c(ukred, scotblue)) +
-  facet_wrap(~Sign, scales = "free") +
+  scale_fill_manual(values = c(scotblue, ukred)) +
+  facet_wrap(~pred_origin, scales = "free") +
   labs(
     y = NULL
   )
@@ -236,7 +236,7 @@ vi_data %>%
 #  covid_wflow_final, 
 #  covid_split
 #)
-
+#
 #write_rds(covid_fit_final, here::here("model-output", "covid_fit_final.rds"), compress = "bz2")
 
 covid_fit_final <- read_rds(here::here("model-output", "covid_fit_final.rds"))
@@ -248,3 +248,32 @@ covid_fit_final %>%
   collect_predictions() %>%
   roc_curve(truth = origin, .pred_Scotland) %>%
   autoplot()
+
+# predict ----------------------------------------------------------------------
+
+scot_sentence <- covid_train %>%
+  filter(origin == "Scotland", str_detect(sentence, "physical")) %>%
+  slice(2)
+
+scot_sentence$sentence
+
+scot_sentence %>%
+  tidytext::unnest_tokens(words, sentence) %>%
+  left_join(vi_data, by = c("words" = "Variable")) %>%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
+  select(-url) %>%
+  print(n = 25)
+
+uk_sentence <- covid_train %>%
+  filter(origin == "UK", str_detect(sentence, "scotland")) %>%
+  slice(2)
+
+uk_sentence$sentence
+
+uk_sentence %>%
+  tidytext::unnest_tokens(words, sentence) %>%
+  left_join(vi_data, by = c("words" = "Variable")) %>%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
+  select(-url) %>%
+  print(n = 25)
+

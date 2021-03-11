@@ -92,7 +92,7 @@ covid_speeches_tf_ifd %>%
   arrange(desc(tf_idf)) %>%
   mutate(word = factor(word, levels = rev(unique(word)))) %>% 
   group_by(origin) %>% 
-  top_n(15) %>% 
+  slice_head(n = 15) %>% 
   ungroup() %>%
   ggplot(aes(y = word, x = tf_idf, fill = origin)) +
   geom_col(show.legend = FALSE) +

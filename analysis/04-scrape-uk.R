@@ -17,6 +17,8 @@ all_speeches_page_uk_p2 <- read_html("https://www.gov.uk/search/all?content_purp
 all_speeches_page_uk_p3 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=3&parent=prime-ministers-office-10-downing-street")
 all_speeches_page_uk_p4 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=4&parent=prime-ministers-office-10-downing-street")
 all_speeches_page_uk_p5 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=5&parent=prime-ministers-office-10-downing-street")
+all_speeches_page_uk_p6 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=6&parent=prime-ministers-office-10-downing-street")
+all_speeches_page_uk_p7 <- read_html("https://www.gov.uk/search/all?content_purpose_supergroup%5B%5D=news_and_communications&level_one_taxon=5b7b9532-a775-4bd2-a3aa-6ce380184b6c&order=updated-newest&organisations%5B%5D=prime-ministers-office-10-downing-street&page=7&parent=prime-ministers-office-10-downing-street")
 
 all_speeches_page_uk <- list(
   all_speeches_page_uk_p1,
@@ -46,14 +48,17 @@ get_speech_urls_uk <- function(page){
 
 speech_urls_uk <- map_dfr(all_speeches_page_uk, get_speech_urls_uk)
 
+# only PM covid speeches -------------------------------------------------------
+
 covid_speech_urls_uk <- speech_urls_uk %>%
-  filter(str_detect(title, "statement on coronavirus"))
+  filter(str_detect(title, "statement on coronavirus")) %>%
+  filter(str_detect(title, "Prime Minister|PM"))
 
 # function to scrape each speech -----------------------------------------------
 
 scrape_speech_uk <- function(url){
   
-  speech_page <-h_page <- read_html(url)
+  speech_page <- read_html(url)
   
   title <- speech_page %>%
     html_node(".gem-c-title__text--long") %>%
@@ -62,7 +67,7 @@ scrape_speech_uk <- function(url){
     str_trim()
   
   date <- speech_page %>%
-    html_node(".app-c-publisher-metadata .app-c-published-dates") %>%
+    html_node(".gem-c-metadata__definition~ .gem-c-metadata__definition") %>%
     html_text() %>%
     str_remove("Published ") %>%
     str_remove_all("\\n") %>%

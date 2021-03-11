@@ -1,6 +1,6 @@
 08-visualise-compare
 ================
-2020-11-30
+2021-03-11
 
 ## Basic comparison
 
@@ -20,8 +20,8 @@ covid_speeches_words %>%
     ## # A tibble: 2 x 4
     ##   origin   n_speeches n_words avg_words
     ## * <chr>         <int>   <int>     <dbl>
-    ## 1 Scotland        157  324931     2070.
-    ## 2 UK               55   65954     1199.
+    ## 1 Scotland        204  422860     2073.
+    ## 2 UK               40   43700     1092.
 
 ``` r
 covid_speeches_words %>%
@@ -65,21 +65,21 @@ covid_speeches_tf_ifd %>%
   arrange(desc(tf_idf))
 ```
 
-    ## # A tibble: 12,183 x 6
+    ## # A tibble: 12,074 x 6
     ## # Groups:   origin [2]
     ##    origin   word            n       tf   idf   tf_idf
     ##    <chr>    <chr>       <int>    <dbl> <dbl>    <dbl>
-    ##  1 UK       slide          34 0.000516 0.693 0.000357
-    ##  2 Scotland aberdeen      154 0.000474 0.693 0.000329
-    ##  3 UK       defeat         30 0.000455 0.693 0.000315
-    ##  4 UK       sir            28 0.000425 0.693 0.000294
-    ##  5 Scotland measurement   125 0.000385 0.693 0.000267
-    ##  6 Scotland lanarkshire   119 0.000366 0.693 0.000254
-    ##  7 UK       ventilators    22 0.000334 0.693 0.000231
-    ##  8 Scotland clyde         106 0.000326 0.693 0.000226
-    ##  9 UK       speaker        21 0.000318 0.693 0.000221
-    ## 10 Scotland cluster        97 0.000299 0.693 0.000207
-    ## # … with 12,173 more rows
+    ##  1 Scotland registered    346 0.000818 0.693 0.000567
+    ##  2 Scotland glasgow       217 0.000513 0.693 0.000356
+    ##  3 UK       slide          21 0.000481 0.693 0.000333
+    ##  4 UK       speaker        21 0.000481 0.693 0.000333
+    ##  5 Scotland suspected     192 0.000454 0.693 0.000315
+    ##  6 Scotland aberdeen      171 0.000404 0.693 0.000280
+    ##  7 Scotland usual         171 0.000404 0.693 0.000280
+    ##  8 Scotland measurement   168 0.000397 0.693 0.000275
+    ##  9 Scotland issues        157 0.000371 0.693 0.000257
+    ## 10 Scotland lanarkshire   144 0.000341 0.693 0.000236
+    ## # … with 12,064 more rows
 
 Visualise TF-IDF
 
@@ -88,7 +88,7 @@ covid_speeches_tf_ifd %>%
   arrange(desc(tf_idf)) %>%
   mutate(word = factor(word, levels = rev(unique(word)))) %>% 
   group_by(origin) %>% 
-  top_n(15) %>% 
+  slice_head(n = 15) %>% 
   ungroup() %>%
   ggplot(aes(y = word, x = tf_idf, fill = origin)) +
   geom_col(show.legend = FALSE) +
@@ -97,8 +97,6 @@ covid_speeches_tf_ifd %>%
   scale_fill_manual(values = c(scotblue, ukred)) +
   scale_x_continuous(breaks = c(0, 0.00015, 0.0003), labels = label_number())
 ```
-
-    ## Selecting by tf_idf
 
 <img src="08-visualise-compare_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
 

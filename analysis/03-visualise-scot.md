@@ -1,6 +1,6 @@
 03-visualise-scot
 ================
-2020-11-30
+2021-03-11
 
 ## Length of speech
 
@@ -60,14 +60,13 @@ covid_speeches_scot_words <- covid_speeches_scot_words %>%
 ## Word frequency again
 
 ``` r
-threshold <- 400
+threshold <- 500
 
 covid_speeches_scot_words %>%
   count(word, sort = TRUE) %>%
   filter(n > threshold) %>%
-  ggplot(aes(y = fct_reorder(word, n), x = n, fill = n)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = log(n))) +
+  geom_col(show.legend = FALSE) +
   labs(
     title = "Frequency of words in Scotland COVID-19 briefings",
     subtitle = glue("Words occurring more than {threshold} times"),
@@ -177,7 +176,7 @@ covid_speeches_scot_words %>%
 
 ### Lexicon: NRC
 
-Sentiments: rust, fear, negative, sadness, anger, surprise, positive,
+Sentiments: trust, fear, negative, sadness, anger, surprise, positive,
 disgust, joy, and anticipation.
 
 ``` r
@@ -224,7 +223,8 @@ covid_speeches_scot_words %>%
     title = "Sentiment score of words in Scotland COVID-19 briefings over time",
     subtitle = "NRC lexicon",
     x = "Date", y = "Sentiment score", color = NULL
-  )
+  ) +
+  scale_x_date(guide = guide_axis(check.overlap = TRUE))
 ```
 
 <img src="03-visualise-scot_files/figure-gfm/unnamed-chunk-10-1.png" width="100%" />
@@ -272,3 +272,17 @@ covid_speeches_scot %>%
 ```
 
 <img src="03-visualise-scot_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
+
+## Vaccines
+
+``` r
+covid_speeches_scot_words %>%
+  filter(str_detect(word, "[Vv]accin")) %>%
+  count(date) %>%
+  ggplot(aes(x = date, y = n)) +
+  geom_text(aes(label = "💉", size = n^2), show.legend = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = 'Number of times "vaccine" is mentioned in speech')
+```
+
+<img src="03-visualise-scot_files/figure-gfm/unnamed-chunk-13-1.png" width="100%" />

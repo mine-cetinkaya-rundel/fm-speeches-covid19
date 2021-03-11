@@ -85,14 +85,13 @@ covid_speeches_scot_words <- covid_speeches_scot_words %>%
 ## Word frequency again
 
 ```{r fig.asp = 0.8}
-threshold <- 400
+threshold <- 500
 
 covid_speeches_scot_words %>%
   count(word, sort = TRUE) %>%
   filter(n > threshold) %>%
-  ggplot(aes(y = fct_reorder(word, n), x = n, fill = n)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = log(n))) +
+  geom_col(show.legend = FALSE) +
   labs(
     title = "Frequency of words in Scotland COVID-19 briefings",
     subtitle = glue("Words occurring more than {threshold} times"),
@@ -235,7 +234,8 @@ covid_speeches_scot_words %>%
     title = "Sentiment score of words in Scotland COVID-19 briefings over time",
     subtitle = "NRC lexicon",
     x = "Date", y = "Sentiment score", color = NULL
-  )
+  ) +
+  scale_x_date(guide = guide_axis(check.overlap = TRUE))
 ```
 
 ## Bigram frequency
@@ -276,5 +276,17 @@ covid_speeches_scot %>%
        subtitle = "Number of mentions over time") +
   scale_color_manual(values = c(scotblue, "darkgray")) +
   scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 2))
+```
+
+## Vaccines
+
+```{r dev="ragg_png"}
+covid_speeches_scot_words %>%
+  filter(str_detect(word, "[Vv]accin")) %>%
+  count(date) %>%
+  ggplot(aes(x = date, y = n)) +
+  geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = 'Number of times "vaccine" is mentioned in speech')
 ```
 
