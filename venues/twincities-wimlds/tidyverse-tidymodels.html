@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>tidyverse to tidymodels</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="introds.org" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/font-awesome/css/all.css" rel="stylesheet" />
+    <link href="libs/font-awesome/css/v4-shims.css" rel="stylesheet" />
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="slides.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# tidyverse to tidymodels
+### <a href="https://introds.org/">introds.org</a>
+### <br><br> Dr. Mine Çetinkaya-Rundel <br> UoE | RStudio | Duke
+
+---
+
+
+
+
+
+
+## tidyverse 
+
+.pull-left[
+&lt;img src="img/tidyverse.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+.center[.large[
+[tidyverse.org](https://www.tidyverse.org/)
+]]
+
+- The **tidyverse** is an opinionated collection of R packages designed for data science
+- All packages share an underlying philosophy and a common grammar
+]
+
+---
+
+class: middle
+
+&lt;img src="img/tidyverse-packages.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## tidymodels
+
+.pull-left[
+&lt;img src="img/tidymodels.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+.center[.large[
+[tidymodels.org](https://www.tidymodels.org/)
+]]
+
+- The **tidymodels** framework is a collection of packages for modeling and machine learning using **tidyverse** principles.
+- All packages share an underlying philosophy and a common grammar
+]
+
+---
+
+class: middle
+
+&lt;img src="img/tidymodels-packages.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Data science cycle
+
+&lt;img src="img/data-science.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+.footnote[
+[R for Data Science](https://r4ds.had.co.nz/introduction.html), Grolemund and Wickham.
+]
+
+---
+
+class: middle
+
+&lt;img src="img/fm-speech-oct-26.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# Import
+
+---
+
+## 🏁 Start with
+
+&lt;img src="img/fm-speeches.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## End with 🛑
+
+
+```
+## # A tibble: 207 x 6
+##    title     date       location   abstract     text     url     
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;    &lt;chr&gt;   
+##  1 Coronavi… 2021-03-09 Scottish … Statement g… "Presid… https:/…
+##  2 Coronavi… 2021-03-05 Scottish … Parliamenta… "Hello.… https:/…
+##  3 Coronavi… 2021-03-04 Scottish … Parliamenta… "I will… https:/…
+##  4 Coronavi… 2021-03-02 Scottish … Statement g… "Presid… https:/…
+##  5 Coronavi… 2021-02-25 Scottish … Statement g… "I will… https:/…
+##  6 Coronavi… 2021-02-24 St Andrew… Statement g… "\nGood… https:/…
+##  7 Coronavi… 2021-02-23 Scottish … Statement g… "Presid… https:/…
+##  8 Coronavi… 2021-02-22 St Andrew… Statement g… "\nGood… https:/…
+##  9 Coronavi… 2021-02-18 St Andrew… Statement g… "\nAs u… https:/…
+## 10 Coronavi… 2021-02-17 Scottish … Parliamenta… "I will… https:/…
+## 11 Coronavi… 2021-02-16 Scottish … Parliamenta… "Presid… https:/…
+## 12 Coronavi… 2021-02-15 St Andrew… Statement g… "\nGood… https:/…
+## 13 Coronavi… 2021-02-11 St Andrew… Statement g… "\nGood… https:/…
+## 14 Coronavi… 2021-02-10 Scottish … Parliamenta… "I will… https:/…
+## 15 Coronavi… 2021-02-09 St Andrew… Statement g… "\nFirs… https:/…
+## # … with 192 more rows
+```
+
+---
+
+#### .center[
+[www.gov.scot/collections/first-ministers-speeches](https://www.gov.scot/collections/first-ministers-speeches/)
+]
+
+&lt;img src="img/fm-speeches-annotated.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+
+&lt;img src="img/fm-speech-oct-26-annotated.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Plan: Get data from a single page
+
+1. Scrape `title`, `date`, `location`, `abstract`, and `text` from a few COVID-19 speech pages to develop the code
+
+2. Write a function that scrapes `title`, `date`, `location`, `abstract`, and `text` from COVID-19 speech pages
+
+3. Scrape the `url`s of COVID-19 speeches from the main page
+
+4. Use this function to scrape from each individual COVID-19 speech from these `url`s and create a data frame with the columns `title`, `date`, `location`, `abstract`, `text`, and `url`
+
+---
+
+## rvest
+
+.pull-left[
+- The **rvest** package makes basic processing and manipulation of HTML data straight forward
+- It's designed to work with pipelines built with `%&gt;%`
+
+```r
+library(rvest)
+```
+
+]
+.pull-right[
+&lt;img src="img/rvest.png" width="230" style="display: block; margin: auto 0 auto auto;" /&gt;
+]
+
+---
+
+## Read page for 26 Oct speech
+
+
+```r
+url &lt;- "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-26-october/"
+speech_page &lt;- read_html(url)
+```
+
+.pull-left[
+
+```r
+speech_page
+```
+
+```
+## {html_document}
+## &lt;html dir="ltr" lang="en"&gt;
+## [1] &lt;head&gt;\n&lt;meta http-equiv="Content-Type" content="text/html ...
+## [2] &lt;body class="fontawesome site-header__container"&gt;\n\n\n\n\ ...
+```
+]
+.pull-right[
+&lt;img src="img/fm-speech-oct-26.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Extract title
+
+.pull-left-wide[
+&lt;br&gt;&lt;br&gt;
+
+```r
+title &lt;- speech_page %&gt;%
+    html_node(".article-header__title") %&gt;%
+    html_text()
+
+title
+```
+
+```
+## [1] "Coronavirus (COVID-19) update: First Minister's speech 26 October"
+```
+]
+.pull-right-narrow[
+&lt;img src="img/title.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Extract date
+
+.pull-left-wide[
+
+```r
+library(lubridate)
+
+speech_page %&gt;%
+    html_node(".content-data__list:nth-child(1) strong") %&gt;%
+    html_text() 
+```
+
+```
+## [1] "26 Oct 2020"
+```
+
+```r
+date &lt;- speech_page %&gt;%
+    html_node(".content-data__list:nth-child(1) strong") %&gt;%
+    html_text() %&gt;%
+    dmy()
+date
+```
+
+```
+## [1] "2020-10-26"
+```
+]
+.pull-right-narrow[
+&lt;img src="img/date.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Similarly...
+
+extract location, abstract, and text
+
+---
+
+## Put it all in a data frame
+
+.pull-left[
+
+
+
+
+```r
+oct_26_speech &lt;- tibble(
+  title    = title,
+  date     = date,
+  location = location,
+  abstract = abstract,
+  text     = text,
+  url      = url
+)
+
+oct_26_speech
+```
+
+```
+## # A tibble: 1 x 6
+##   title       date       location   abstract     text  url       
+##   &lt;chr&gt;       &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;lis&gt; &lt;chr&gt;     
+## 1 Coronaviru… 2020-10-26 St Andrew… Statement g… &lt;chr… https://w…
+```
+]
+.pull-right[
+&lt;img src="img/fm-speech-oct-26.png" width="75%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Plan: Get data from all pages
+
+- Write a function that scrapes the data from a single page and returns a data frame with a single row for that page
+
+- Obtain a list of URLs of all pages
+
+- Map the function over the list of all URLs to obtain a data framw where each row is a single speech and the number of rows is the number of speeches
+
+
+```
+## # A tibble: 207 x 6
+##   title     date       location   abstract     text      url     
+##   &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;   
+## 1 Coronavi… 2021-03-09 Scottish … Statement g… "Presidi… https:/…
+## 2 Coronavi… 2021-03-05 Scottish … Parliamenta… "Hello. … https:/…
+## 3 Coronavi… 2021-03-04 Scottish … Parliamenta… "I will … https:/…
+## 4 Coronavi… 2021-03-02 Scottish … Statement g… "Presidi… https:/…
+## 5 Coronavi… 2021-02-25 Scottish … Statement g… "I will … https:/…
+## 6 Coronavi… 2021-02-24 St Andrew… Statement g… "\nGood … https:/…
+## # … with 201 more rows
+```
+
+---
+
+## Write a function
+
+.xsmall[
+
+```r
+scrape_speech_scot &lt;- function(url){
+  
+  speech_page &lt;- read_html(url)
+  
+  title &lt;- speech_page %&gt;%
+    html_node(".article-header__title") %&gt;%
+    html_text()
+  
+  date &lt;- speech_page %&gt;%
+    html_node(".content-data__list:nth-child(1) strong") %&gt;%
+    html_text() %&gt;%
+    dmy()
+  
+  location &lt;- speech_page %&gt;%
+    html_node(".content-data__list+ .content-data__list strong") %&gt;%
+    html_text()
+  
+  abstract &lt;- speech_page %&gt;%
+    html_node(".leader--first-para p") %&gt;%
+    html_text()
+  
+  text &lt;- speech_page %&gt;% 
+    html_nodes("#preamble p") %&gt;%
+    html_text() %&gt;%
+    glue_collapse(sep = " ") %&gt;%
+    as.character()
+  
+  tibble(
+    title    = title,
+    date     = date,
+    location = location,
+    abstract = abstract,
+    text     = text,
+    url      = url
+  )
+  
+}
+```
+]
+
+---
+
+## Get a list of all URLs
+
+
+```r
+all_speeches_page_scot &lt;- read_html("https://www.gov.scot/collections/first-ministers-speeches/")
+
+covid_speech_urls_uk_scot &lt;- all_speeches_page_scot %&gt;%
+  html_nodes(".collections-list a") %&gt;%
+  html_attr("href") %&gt;%
+  str_subset("covid-19") %&gt;%
+  str_c("https://www.gov.scot", .)
+```
+
+---
+
+## Map the function over all URLs
+
+
+```r
+covid_speeches_scot &lt;- map_dfr(covid_speech_urls_uk_scot, scrape_speech_scot)
+```
+
+
+```r
+covid_speeches_scot
+```
+
+```
+## # A tibble: 207 x 6
+##   title     date       location   abstract     text      url     
+##   &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;   
+## 1 Coronavi… 2021-03-09 Scottish … Statement g… "Presidi… https:/…
+## 2 Coronavi… 2021-03-05 Scottish … Parliamenta… "Hello. … https:/…
+## 3 Coronavi… 2021-03-04 Scottish … Parliamenta… "I will … https:/…
+## 4 Coronavi… 2021-03-02 Scottish … Statement g… "Presidi… https:/…
+## 5 Coronavi… 2021-02-25 Scottish … Statement g… "I will … https:/…
+## 6 Coronavi… 2021-02-24 St Andrew… Statement g… "\nGood … https:/…
+## # … with 201 more rows
+```
+
+---
+
+class: middle
+
+# Transform and visualise
+
+---
+
+## Filter for First minister speeches
+
+
+```r
+covid_speeches_scot &lt;- covid_speeches_scot %&gt;%
+  filter(str_detect(abstract, "First Minister"))
+
+covid_speeches_scot
+```
+
+```
+## # A tibble: 204 x 6
+##   title     date       location   abstract     text      url     
+##   &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;     &lt;chr&gt;   
+## 1 Coronavi… 2021-03-09 Scottish … Statement g… "Presidi… https:/…
+## 2 Coronavi… 2021-03-05 Scottish … Parliamenta… "Hello. … https:/…
+## 3 Coronavi… 2021-03-04 Scottish … Parliamenta… "I will … https:/…
+## 4 Coronavi… 2021-03-02 Scottish … Statement g… "Presidi… https:/…
+## 5 Coronavi… 2021-02-25 Scottish … Statement g… "I will … https:/…
+## 6 Coronavi… 2021-02-24 St Andrew… Statement g… "\nGood … https:/…
+## # … with 198 more rows
+```
+
+---
+
+## Count number of words in each speech
+
+
+```r
+covid_speeches_scot &lt;- covid_speeches_scot %&gt;%
+  rowwise() %&gt;%
+  mutate(n_words = text %&gt;% str_count("\\w+") %&gt;% sum()) %&gt;%
+  ungroup()
+
+covid_speeches_scot
+```
+
+```
+## # A tibble: 204 x 7
+##   title    date       location  abstract  text    url     n_words
+##   &lt;chr&gt;    &lt;date&gt;     &lt;chr&gt;     &lt;chr&gt;     &lt;chr&gt;   &lt;chr&gt;     &lt;int&gt;
+## 1 Coronav… 2021-03-09 Scottish… Statemen… "Presi… https:…    3355
+## 2 Coronav… 2021-03-05 Scottish… Parliame… "Hello… https:…    1199
+## 3 Coronav… 2021-03-04 Scottish… Parliame… "I wil… https:…     561
+## 4 Coronav… 2021-03-02 Scottish… Statemen… "Presi… https:…    2365
+## 5 Coronav… 2021-02-25 Scottish… Statemen… "I wil… https:…     700
+## 6 Coronav… 2021-02-24 St Andre… Statemen… "\nGoo… https:…    2466
+## # … with 198 more rows
+```
+
+---
+
+## Length of speech over time
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="tidyverse-tidymodels_files/figure-html/words-over-time-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[R Code]
+
+```r
+ggplot(covid_speeches_scot, aes(x = date, y = n_words)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(aes(x = date, y = n_words), method = lm, formula = y ~ x) +
+  labs(
+    title = "Length of Scotland COVID-19 speeches",
+    subtitle = "Measured in number of words"
+  )
+```
+]
+]
+
+---
+
+## Length of speech over time, again
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="tidyverse-tidymodels_files/figure-html/words-over-time-better-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+.panel[.panel-name[R Code]
+
+```r
+# set color: https://www.schemecolor.com/flag-of-scotland-colors.php
+*scotblue &lt;- "#0065BF"
+
+covid_speeches_scot %&gt;%
+  ggplot(aes(x = date, y = n_words)) +
+* geom_point(alpha = 0.7, color = scotblue) +
+* geom_smooth(aes(x = date, y = n_words), method = lm, formula = y ~ x,  color = "darkgray") +
+  labs(
+    title = "Length of Scotland COVID-19 speeches over time",
+    subtitle = "Measured in number of words",
+*   x = NULL,
+*   y = "Number of words"
+  ) +
+* theme_minimal()
+```
+]
+]
+
+---
+
+## tidytext
+
+.pull-left[
+- Using tidy data principles can make many text mining tasks easier, more effective, and consistent with tools already in wide use
+- Learn more at [tidytextmining.com](https://www.tidytextmining.com/)
+
+```r
+library(tidytext)
+```
+
+]
+.pull-right[
+&lt;img src="img/tidytext.png" width="60%" style="display: block; margin: auto auto auto 0;" /&gt;
+]
+
+---
+
+## Tokenize speeches by word
+
+.panelset[
+.panel[.panel-name[Plot]
+
+```
+## # A tibble: 422,860 x 7
+##   date       word   title    location  abstract   url     n_words
+##   &lt;date&gt;     &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;     &lt;chr&gt;      &lt;chr&gt;     &lt;int&gt;
+## 1 2021-03-09 presi… Coronav… Scottish… Statement… https:…    3355
+## 2 2021-03-09 offic… Coronav… Scottish… Statement… https:…    3355
+## 3 2021-03-09 i      Coronav… Scottish… Statement… https:…    3355
+## 4 2021-03-09 will   Coronav… Scottish… Statement… https:…    3355
+## 5 2021-03-09 update Coronav… Scottish… Statement… https:…    3355
+## 6 2021-03-09 parli… Coronav… Scottish… Statement… https:…    3355
+## # … with 422,854 more rows
+```
+]
+
+.panel[.panel-name[R Code]
+
+```r
+covid_speeches_scot_words &lt;- covid_speeches_scot %&gt;%
+  # make sure COVID-19 (and all its various spellings) don't get split
+  # tidytext doesn't remove underscores
+  # https://stackoverflow.com/questions/58281091/preserve-hyphenated-words-in-ngrams-analysis-with-tidytext
+  mutate(
+    text = str_replace_all(text, "COVID-19", "COVID_19"),
+    text = str_replace_all(text, "COVID 19", "COVID_19"),
+    text = str_replace_all(text, "Covid-19", "COVID_19"),
+    text = str_replace_all(text, "Covid 19", "COVID_19")
+  ) %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  relocate(date, word)
+
+covid_speeches_scot_words
+```
+]
+]
+
+---
+
+## Find common words
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="tidyverse-tidymodels_files/figure-html/scot-common-words-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[R Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  anti_join(stop_words) %&gt;%
+  count(word, sort = TRUE) %&gt;%
+  slice_head(n = 15) %&gt;%
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = log(n))) +
+  geom_col(show.legend = FALSE) +
+  labs(
+    title = "Commonly used words in Scotland COVID-19 briefings",
+    y = NULL, x = "Frequency"
+  ) +
+  theme_minimal()
+```
+]
+]
+
+---
+
+## Social vs. physical distancing
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="tidyverse-tidymodels_files/figure-html/social-physical-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[R Code]
+
+```r
+covid_speeches_scot %&gt;%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %&gt;%
+  filter(str_detect(bigram, "social dist|physical dist")) %&gt;%
+  mutate(soc_phys = if_else(str_detect(bigram, "social"), "S", "P")) %&gt;%
+  count(date, soc_phys) %&gt;%
+  ggplot(aes(x = date, y = n, color = soc_phys)) +
+  geom_text(aes(label = soc_phys)) +
+  guides(color = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = "Social (S) vs. physical (P) distancing",
+       subtitle = "Number of mentions over time") +
+  scale_color_manual(values = c(scotblue, "darkgray")) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
+  theme_minimal()
+```
+]
+]
+
+---
+
+## Vaccines
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="tidyverse-tidymodels_files/figure-html/vaccines-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[R Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  filter(str_detect(word, "[Vv]accin")) %&gt;%
+  count(date) %&gt;%
+  ggplot(aes(x = date, y = n)) +
+  geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = 'Number of times "vaccine" is mentioned in speech') +
+  theme_minimal()
+```
+]
+]
+
+---
+
+## Compare to UK
+
+&lt;img src="tidyverse-tidymodels_files/figure-html/unnamed-chunk-38-1.png" width="85%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# Model
+
+---
+
+## Predicting UK vs. Scotland
+
+
+
+
+```r
+covid_speeches %&gt;%
+  count(origin)
+```
+
+```
+## # A tibble: 2 x 2
+##   origin       n
+## * &lt;fct&gt;    &lt;int&gt;
+## 1 Scotland   207
+## 2 UK          40
+```
+
+---
+
+## Tokenize into sentences
+
+
+```r
+covid_speeches_sentences &lt;- covid_speeches %&gt;%
+  unnest_tokens(sentence, text, token = "sentences")
+
+covid_speeches_sentences %&gt;%
+  relocate(sentence)
+```
+
+```
+## # A tibble: 20,445 x 4
+##   sentence                            speech_id date       origin
+##   &lt;chr&gt;                               &lt;chr&gt;     &lt;date&gt;     &lt;fct&gt; 
+## 1 presiding officer i will update pa… 1         2021-03-09 Scotl…
+## 2 these changes relate to outdoor me… 1         2021-03-09 Scotl…
+## 3 i will also announce a change whic… 1         2021-03-09 Scotl…
+## 4 now while the changes i set out to… 1         2021-03-09 Scotl…
+## 5 and they do represent gradual, but… 1         2021-03-09 Scotl…
+## 6 next week, i will set out a firmer… 1         2021-03-09 Scotl…
+## # … with 20,439 more rows
+```
+
+---
+
+## Split into testing and training
+
+
+```r
+set.seed(1234)
+covid_split &lt;- initial_split(covid_speeches_sentences, strata = origin)
+covid_train &lt;- training(covid_split)
+covid_test  &lt;- testing(covid_split)
+```
+
+---
+
+## Specify a model
+
+
+```r
+lasso_mod &lt;- logistic_reg(penalty = 0.005, mixture = 1) %&gt;%
+  set_engine("glmnet")
+```
+
+---
+
+## Build a recipe
+
+
+```r
+library(textrecipes)
+
+covid_rec &lt;- recipe(origin ~ sentence, data = covid_train) %&gt;%
+  # tokenize into words
+  step_tokenize(sentence, token = "words") %&gt;%
+  # filter out stop words
+  step_stopwords(sentence) %&gt;%
+  # all the 1-grams followed by all the 2-grams followed by all the 3-grams
+  step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %&gt;%
+  # keep the 500 most frequent words to avoid creating too many variables 
+  step_tokenfilter(sentence, max_tokens = 500) %&gt;%
+  # calculate tf-idf
+  step_tfidf(sentence)
+```
+
+---
+
+## Build a workflow
+
+
+```r
+covid_wflow &lt;- workflow() %&gt;%
+  add_model(lasso_mod) %&gt;%
+  add_recipe(covid_rec)
+```
+
+---
+
+## Perform cross-validation
+
+
+
+
+
+```r
+set.seed(1234)
+covid_folds &lt;- vfold_cv(covid_train, v = 10, strata = origin)
+```
+
+
+```r
+covid_folds
+```
+
+```
+## #  10-fold cross-validation using stratification 
+## # A tibble: 10 x 2
+##   splits               id    
+##   &lt;list&gt;               &lt;chr&gt; 
+## 1 &lt;split [13800/1534]&gt; Fold01
+## 2 &lt;split [13800/1534]&gt; Fold02
+## 3 &lt;split [13800/1534]&gt; Fold03
+## 4 &lt;split [13800/1534]&gt; Fold04
+## 5 &lt;split [13801/1533]&gt; Fold05
+## 6 &lt;split [13801/1533]&gt; Fold06
+## # … with 4 more rows
+```
+
+
+---
+
+## Fit resamples
+
+
+
+
+
+```r
+covid_fit_rs &lt;- covid_wflow %&gt;%
+  fit_resamples(
+    covid_folds,
+    control = control_resamples(save_pred = TRUE)
+  )
+```
+
+
+```r
+covid_train_metrics &lt;- collect_metrics(covid_fit_rs)
+covid_train_metrics
+```
+
+```
+## # A tibble: 2 x 6
+##   .metric  .estimator  mean     n std_err .config             
+##   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               
+## 1 accuracy binary     0.918    10 0.00234 Preprocessor1_Model1
+## 2 roc_auc  binary     0.784    10 0.00558 Preprocessor1_Model1
+```
+
+---
+
+## ROC curve
+
+.small[
+
+```r
+covid_train_pred &lt;- collect_predictions(covid_fit_rs)
+
+covid_train_pred %&gt;%
+  group_by(id) %&gt;%
+  roc_curve(truth = origin, .pred_Scotland) %&gt;%
+  autoplot() +
+  labs(
+    title = "ROC curve for Scotland &amp; UK COVID speeches",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+```
+
+&lt;img src="tidyverse-tidymodels_files/figure-html/unnamed-chunk-52-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Make predictions for test data
+
+
+```r
+covid_fit &lt;- covid_wflow %&gt;%
+  fit(data = covid_train)
+
+covid_test_pred &lt;- predict(covid_fit, new_data = covid_test, type = "prob") %&gt;%
+  bind_cols(covid_test %&gt;% select(origin, speech_id, sentence))
+
+covid_test_pred
+```
+
+```
+## # A tibble: 5,111 x 5
+##   .pred_Scotland .pred_UK origin  speech_id sentence             
+##            &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;chr&gt;     &lt;chr&gt;                
+## 1          0.927   0.0726 Scotla… 1         i will though be spe…
+## 2          0.961   0.0387 Scotla… 1         and the total number…
+## 3          0.905   0.0950 Scotla… 1         and then in two week…
+## 4          0.884   0.116  Scotla… 1         current plans for 23…
+## 5          0.940   0.0599 Scotla… 1         in addition, i know …
+## 6          0.940   0.0599 Scotla… 1         and so i think it is…
+## # … with 5,105 more rows
+```
+
+---
+
+## ROC curve
+
+
+```r
+covid_test_pred %&gt;%
+  roc_curve(truth = origin, .pred_Scotland) %&gt;%
+  autoplot()
+```
+
+&lt;img src="tidyverse-tidymodels_files/figure-html/unnamed-chunk-54-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## View predictions
+
+
+```r
+covid_test_pred %&gt;%
+  roc_auc(truth = origin, .pred_Scotland)
+```
+
+```
+## # A tibble: 1 x 3
+##   .metric .estimator .estimate
+##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+## 1 roc_auc binary         0.762
+```
+
+```r
+covid_test_pred %&gt;% 
+  filter(origin == "Scotland", .pred_UK &gt; 0.5)
+```
+
+```
+## # A tibble: 14 x 5
+##   .pred_Scotland .pred_UK origin  speech_id sentence             
+##            &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;chr&gt;     &lt;chr&gt;                
+## 1          0.351    0.649 Scotla… 19        we must guard agains…
+## 2          0.472    0.528 Scotla… 37        and if that happens,…
+## 3          0.346    0.654 Scotla… 51        we are seeing simila…
+## 4          0.354    0.646 Scotla… 58        we must drive the in…
+## 5          0.408    0.592 Scotla… 68        the chancellors’ com…
+## 6          0.470    0.530 Scotla… 105       i will announce furt…
+## # … with 8 more rows
+```
+
+---
+
+## What decisions did we make?
+
+without thinking about it much...
+
+- `step_tokenfilter(sentence, max_tokens = 500)` -- why 500 for max_tokens?
+- `logistic_reg(penalty = 0.005, mixture = 1)` -- why 0.005 for penalty?
+
+---
+
+## Tuning
+
+### Specify model
+
+
+```r
+## with penalty ??
+lasso_mod_tune &lt;- logistic_reg(penalty = tune(), mixture = 1) %&gt;%
+  set_engine("glmnet") %&gt;% 
+  set_mode("classification")
+```
+
+---
+
+## Tuning
+
+### Build recipe
+
+
+```r
+covid_rec_tune &lt;- recipe(origin ~ sentence, data = covid_train) %&gt;%
+  step_tokenize(sentence, token = "words") %&gt;%
+  step_stopwords(sentence) %&gt;%
+  step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %&gt;%
+  # keep the ?? most frequent words to avoid creating too many variables 
+  step_tokenfilter(sentence, max_tokens = tune(), min_times = 5) %&gt;%
+  step_tfidf(sentence)
+```
+
+---
+
+## Tuning
+
+### Build workflow
+
+
+```r
+covid_wflow_tune &lt;- workflow() %&gt;%
+  add_model(lasso_mod_tune) %&gt;%
+  add_recipe(covid_rec_tune)
+```
+
+---
+
+## Tuning
+
+### Possible set of hyperparameters
+
+
+```r
+param_grid &lt;- grid_regular(
+  penalty(range = c(-4, 0)),
+  max_tokens(range = c(500, 2000)),
+  levels = 5
+)
+
+param_grid
+```
+
+```
+## # A tibble: 25 x 2
+##   penalty max_tokens
+##     &lt;dbl&gt;      &lt;int&gt;
+## 1  0.0001        500
+## 2  0.001         500
+## 3  0.01          500
+## 4  0.1           500
+## 5  1             500
+## 6  0.0001        875
+## # … with 19 more rows
+```
+
+---
+
+## Tuning
+
+### Train models with all possible set of hyperparameters
+
+
+```r
+set.seed(24)
+covid_fit_rs_tune &lt;- tune_grid(
+  covid_wflow_tune,
+  resamples = covid_folds,
+  grid = param_grid, 
+  control = control_grid(save_pred = TRUE)
+)
+```
+
+---
+
+## Tuning 
+
+### Results
+
+
+
+
+```r
+covid_fit_rs_tune
+```
+
+```
+## Warning: This tuning result has notes. Example notes on model fitting include:
+## preprocessor 2/5, model 1/1 (predictions): partial argument match of 'along' to 'along.with'
+## preprocessor 1/5, model 1/1 (predictions): partial argument match of 'along' to 'along.with'
+## preprocessor 5/5, model 1/1 (predictions): partial argument match of 'along' to 'along.with'
+```
+
+```
+## # Tuning results
+## # 10-fold cross-validation using stratification 
+## # A tibble: 10 x 5
+##   splits         id     .metrics     .notes      .predictions    
+##   &lt;list&gt;         &lt;chr&gt;  &lt;list&gt;       &lt;list&gt;      &lt;list&gt;          
+## 1 &lt;split [13800… Fold01 &lt;tibble [50… &lt;tibble [5… &lt;tibble [38,350…
+## 2 &lt;split [13800… Fold02 &lt;tibble [50… &lt;tibble [5… &lt;tibble [38,350…
+## 3 &lt;split [13800… Fold03 &lt;tibble [50… &lt;tibble [5… &lt;tibble [38,350…
+## 4 &lt;split [13800… Fold04 &lt;tibble [50… &lt;tibble [5… &lt;tibble [38,350…
+## 5 &lt;split [13801… Fold05 &lt;tibble [50… &lt;tibble [5… &lt;tibble [38,325…
+## 6 &lt;split [13801… Fold06 &lt;tibble [50… &lt;tibble [5… &lt;tibble [38,325…
+## # … with 4 more rows
+```
+
+---
+
+## Tuning
+
+### Select best
+
+
+```r
+best_roc_auc &lt;- select_best(covid_fit_rs_tune, "roc_auc")
+
+best_roc_auc
+```
+
+```
+## # A tibble: 1 x 3
+##   penalty max_tokens .config             
+##     &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;               
+## 1   0.001       2000 Preprocessor5_Model2
+```
+
+```r
+covid_wflow_final &lt;- finalize_workflow(covid_wflow_tune, best_roc_auc)
+```
+
+---
+
+## Variable importance
+
+
+
+
+```r
+library(vip)
+
+vi_data &lt;- covid_wflow_final %&gt;%
+  fit(covid_train) %&gt;%
+  pull_workflow_fit() %&gt;%
+  vi(lambda = best_roc_auc$penalty) %&gt;%
+  mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %&gt;%
+  filter(Importance != 0)
+```
+
+
+```r
+vi_data
+```
+
+```
+## # A tibble: 1,088 x 3
+##   Variable     Importance Sign 
+##   &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;
+## 1 covid_secure      14.9  POS  
+## 2 scotland           8.29 NEG  
+## 3 coronavirus        7.34 POS  
+## 4 british            7.29 POS  
+## 5 r                  6.59 POS  
+## 6 r_number           6.55 NEG  
+## # … with 1,082 more rows
+```
+
+---
+
+## Variable importance, visualised
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="tidyverse-tidymodels_files/figure-html/vip-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[R Code]
+
+```r
+vi_data %&gt;%
+  mutate(Importance = abs(Importance)) %&gt;%
+  filter(Importance != 0) %&gt;%
+  group_by(Sign) %&gt;%
+  slice_head(n = 20) %&gt;%
+  ungroup() %&gt;%
+  mutate(pred_origin = if_else(Sign == "POS", "UK", "Scotland")) %&gt;% 
+  ggplot(aes(x = Importance, y = fct_reorder(Variable, Importance), fill = pred_origin )) +
+  geom_col(show.legend = FALSE) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = c(scotblue, ukred)) +
+  facet_wrap(~pred_origin, scales = "free") +
+  labs(y = NULL) +
+  theme_minimal()
+```
+]
+]
+
+---
+
+## Prediction
+
+
+
+.small[
+
+```r
+scot_sentence$sentence
+```
+
+```
+## [1] "all local authorities will - at least until easter - continue to observe the current requirement for 2m physical distancing in secondary schools."
+```
+
+```r
+scot_sentence %&gt;%
+  tidytext::unnest_tokens(words, sentence) %&gt;%
+  left_join(vi_data, by = c("words" = "Variable")) %&gt;%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %&gt;%
+  print(n = 25)
+```
+
+```
+## # A tibble: 21 x 7
+##    speech_id date       origin words Importance Sign  pred_origin
+##    &lt;chr&gt;     &lt;date&gt;     &lt;fct&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;      
+##  1 4         2021-03-02 Scotl… all      NA      &lt;NA&gt;  &lt;NA&gt;       
+##  2 4         2021-03-02 Scotl… local     4.21   POS   UK         
+##  3 4         2021-03-02 Scotl… auth…     0.453  NEG   Scotland   
+##  4 4         2021-03-02 Scotl… will     NA      &lt;NA&gt;  &lt;NA&gt;       
+##  5 4         2021-03-02 Scotl… at       NA      &lt;NA&gt;  &lt;NA&gt;       
+##  6 4         2021-03-02 Scotl… least     1.34   POS   UK         
+##  7 4         2021-03-02 Scotl… until    NA      &lt;NA&gt;  &lt;NA&gt;       
+##  8 4         2021-03-02 Scotl… east…     0.0537 NEG   Scotland   
+##  9 4         2021-03-02 Scotl… cont…    NA      &lt;NA&gt;  &lt;NA&gt;       
+## 10 4         2021-03-02 Scotl… to       NA      &lt;NA&gt;  &lt;NA&gt;       
+## 11 4         2021-03-02 Scotl… obse…    NA      &lt;NA&gt;  &lt;NA&gt;       
+## 12 4         2021-03-02 Scotl… the      NA      &lt;NA&gt;  &lt;NA&gt;       
+## 13 4         2021-03-02 Scotl… curr…    NA      &lt;NA&gt;  &lt;NA&gt;       
+## 14 4         2021-03-02 Scotl… requ…    NA      &lt;NA&gt;  &lt;NA&gt;       
+## 15 4         2021-03-02 Scotl… for      NA      &lt;NA&gt;  &lt;NA&gt;       
+## 16 4         2021-03-02 Scotl… 2m       NA      &lt;NA&gt;  &lt;NA&gt;       
+## 17 4         2021-03-02 Scotl… phys…     0.478  NEG   Scotland   
+## 18 4         2021-03-02 Scotl… dist…    NA      &lt;NA&gt;  &lt;NA&gt;       
+## 19 4         2021-03-02 Scotl… in       NA      &lt;NA&gt;  &lt;NA&gt;       
+## 20 4         2021-03-02 Scotl… seco…     1.46   POS   UK         
+## 21 4         2021-03-02 Scotl… scho…     1.51   POS   UK
+```
+]
+
+---
+
+## Prediction
+
+
+
+.small[
+
+```r
+uk_sentence$sentence
+```
+
+```
+## [1] "we have now vaccinated 1.26 million people in england, 113,000 in scotland, 49,000 in wales, and 46,000 in northern ireland."
+```
+
+```r
+uk_sentence %&gt;%
+  tidytext::unnest_tokens(words, sentence) %&gt;%
+  left_join(vi_data, by = c("words" = "Variable")) %&gt;%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %&gt;%
+  print(n = 25)
+```
+
+```
+## # A tibble: 20 x 7
+##    speech_id date       origin words Importance Sign  pred_origin
+##    &lt;chr&gt;     &lt;date&gt;     &lt;fct&gt;  &lt;chr&gt;      &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;      
+##  1 8         2021-01-07 UK     we        NA     &lt;NA&gt;  &lt;NA&gt;       
+##  2 8         2021-01-07 UK     have      NA     &lt;NA&gt;  &lt;NA&gt;       
+##  3 8         2021-01-07 UK     now        0.898 POS   UK         
+##  4 8         2021-01-07 UK     vacc…      0.767 POS   UK         
+##  5 8         2021-01-07 UK     1.26      NA     &lt;NA&gt;  &lt;NA&gt;       
+##  6 8         2021-01-07 UK     mill…      1.72  POS   UK         
+##  7 8         2021-01-07 UK     peop…      0.274 POS   UK         
+##  8 8         2021-01-07 UK     in        NA     &lt;NA&gt;  &lt;NA&gt;       
+##  9 8         2021-01-07 UK     engl…      3.96  POS   UK         
+## 10 8         2021-01-07 UK     113,…     NA     &lt;NA&gt;  &lt;NA&gt;       
+## 11 8         2021-01-07 UK     in        NA     &lt;NA&gt;  &lt;NA&gt;       
+## 12 8         2021-01-07 UK     scot…      8.29  NEG   Scotland   
+## 13 8         2021-01-07 UK     49,0…     NA     &lt;NA&gt;  &lt;NA&gt;       
+## 14 8         2021-01-07 UK     in        NA     &lt;NA&gt;  &lt;NA&gt;       
+## 15 8         2021-01-07 UK     wales     NA     &lt;NA&gt;  &lt;NA&gt;       
+## 16 8         2021-01-07 UK     and       NA     &lt;NA&gt;  &lt;NA&gt;       
+## 17 8         2021-01-07 UK     46,0…     NA     &lt;NA&gt;  &lt;NA&gt;       
+## 18 8         2021-01-07 UK     in        NA     &lt;NA&gt;  &lt;NA&gt;       
+## 19 8         2021-01-07 UK     nort…      5.37  POS   UK         
+## 20 8         2021-01-07 UK     irel…      0.202 NEG   Scotland
+```
+]
+
+---
+
+## Acknowledgements &amp; learn more
+
+- Read the full case study, with code: https://github.com/mine-cetinkaya-rundel/fm-speeches-covid19
+
+- Learn tidyverse: https://www.tidyverse.org/learn
+
+- Learn tidymodels: https://www.tidymodels.org/learn
+
+- Much of this was inspired by Julia Silge and Emil Hvitfeldt's useR tutorial: 
+
+https://emilhvitfeldt.github.io/useR2020-text-modeling-tutorial
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightLines": true,
+"highlightStyle": "solarized-light",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
