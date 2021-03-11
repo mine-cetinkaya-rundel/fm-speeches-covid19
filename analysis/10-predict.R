@@ -78,16 +78,25 @@ covid_wflow <- workflow() %>%
 
 # cv ---------------------------------------------------------------------------
 
-set.seed(1234)
-covid_folds <- vfold_cv(covid_train, v = 10, strata = origin)
+#set.seed(1234)
+#covid_folds <- vfold_cv(covid_train, v = 10, strata = origin)
+#
+#write_rds(covid_folds, here::here("model-output", "covid_folds.rds"), compress = "bz2")
+
+covid_folds <- read_rds(here::here("model-output", "covid_folds.rds"))
+
 
 # fit resamples ----------------------------------------------------------------
 
-covid_fit_rs <- covid_wflow %>%
-  fit_resamples(
-    covid_folds,
-    control = control_resamples(save_pred = TRUE)
-  )
+#covid_fit_rs <- covid_wflow %>%
+#  fit_resamples(
+#    covid_folds,
+#    control = control_resamples(save_pred = TRUE)
+#  )
+
+#write_rds(covid_fit_rs, here::here("model-output", "covid_fit_rs.rds"), compress = "bz2")
+
+covid_fit_rs <- read_rds(here::here("model-output", "covid_fit_rs.rds"))
 
 covid_train_metrics <- collect_metrics(covid_fit_rs)
 covid_train_pred <- collect_predictions(covid_fit_rs)
