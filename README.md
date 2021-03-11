@@ -1,7 +1,7 @@
 fm-speeches-covid19
 ================
 
-Comparing COVID speeches by Scottish and UK governments.
+## Comparing COVID speeches by Scottish and UK governments.
 
 Data sources:
 
@@ -26,3 +26,8 @@ robotstxt::paths_allowed("https://www.gov.uk/")
     ##  www.gov.uk
 
     ## [1] TRUE
+
+## Talks
+
+-   TwinCities WIMLDS - Mar 2021 -
+    [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/twincities-wimlds/tidyverse-tidymodels.html#1)
