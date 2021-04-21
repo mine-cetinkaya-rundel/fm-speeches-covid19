@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>That’s what Nicola said</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="A tidy case study of Nicola Sturgeon’s COVID-19 briefings" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link href="libs/panelset/panelset.css" rel="stylesheet" />
+    <script src="libs/panelset/panelset.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="slides.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# That’s what Nicola said
+### A tidy case study of<br>Nicola Sturgeon’s COVID-19 briefings
+### <br><br> Dr. Mine Çetinkaya-Rundel <br> UoE | RStudio | Duke
+
+---
+
+
+
+
+
+
+## Data science cycle
+
+&lt;img src="img/data-science.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+.footnote[
+[R for Data Science](https://r4ds.had.co.nz/introduction.html), Grolemund and Wickham.
+]
+
+---
+
+## tidyverse 
+
+.pull-left[
+&lt;img src="img/tidyverse.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+.center[.large[
+[tidyverse.org](https://www.tidyverse.org/)
+]]
+
+- The **tidyverse** is an opinionated collection of R packages designed for data science
+- All packages share an underlying philosophy and a common grammar
+]
+
+---
+
+class: middle
+
+&lt;img src="img/tidyverse-packages.png" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# Import
+
+---
+
+## 🏁 Start with
+
+&lt;img src="img/fm-speeches.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## End with 🛑
+
+
+```
+## # A tibble: 218 x 6
+##    title     date       location   abstract     text     url     
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;    &lt;chr&gt;   
+##  1 Coronavi… 2021-04-20 St Andrew… Statement g… "Good a… https:/…
+##  2 Coronavi… 2021-04-13 St Andrew… Statement g… "Thanks… https:/…
+##  3 Coronavi… 2021-04-06 St Andrew… Statement g… "Good a… https:/…
+##  4 Coronavi… 2021-03-30 St Andrew… Statement g… "Thanks… https:/…
+##  5 Coronavi… 2021-03-24 Scottish … Statement g… "Thank … https:/…
+##  6 Coronavi… 2021-03-23 The Scott… Statement g… "Presid… https:/…
+##  7 Coronavi… 2021-03-18 Scottish … Statement g… "Thank … https:/…
+##  8 Coronavi… 2021-03-17 St Andrew… Statement g… "\nGood… https:/…
+##  9 Coronavi… 2021-03-16 Scottish … Statement g… "Presid… https:/…
+## 10 Coronavi… 2021-03-15 St Andrew… Statement g… "\nGood… https:/…
+## 11 Coronavi… 2021-03-11 Scottish … Statement g… "I can … https:/…
+## 12 Coronavi… 2021-03-09 Scottish … Statement g… "Presid… https:/…
+## 13 Coronavi… 2021-03-05 Scottish … Parliamenta… "Hello.… https:/…
+## 14 Coronavi… 2021-03-04 Scottish … Parliamenta… "I will… https:/…
+## 15 Coronavi… 2021-03-02 Scottish … Statement g… "Presid… https:/…
+## # … with 203 more rows
+```
+
+---
+
+#### .center[
+[www.gov.scot/collections/first-ministers-speeches](https://www.gov.scot/collections/first-ministers-speeches/)
+]
+
+&lt;img src="img/fm-speeches-annotated.png" width="75%" style="display: block; margin: auto;" /&gt;
+
+---
+
+&lt;img src="img/fm-speech-oct-26-annotated.png" width="65%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Plan: Get data from a single page
+
+1. Scrape `title`, `date`, `location`, `abstract`, and `text` from a few COVID-19 speech pages to develop the code
+
+2. Write a function that scrapes `title`, `date`, `location`, `abstract`, and `text` from COVID-19 speech pages
+
+3. Scrape the `url`s of COVID-19 speeches from the main page
+
+4. Use this function to scrape from each individual COVID-19 speech from these `url`s and create a data frame with the columns `title`, `date`, `location`, `abstract`, `text`, and `url`
+
+---
+
+## rvest
+
+.pull-left[
+- The **rvest** package makes basic processing and manipulation of HTML data straight forward
+- It's designed to work with pipelines built with `%&gt;%`
+
+```r
+library(rvest)
+```
+
+]
+.pull-right[
+&lt;img src="img/rvest.png" width="230" style="display: block; margin: auto 0 auto auto;" /&gt;
+]
+
+---
+
+## Read page for 26 Oct speech
+
+
+```r
+url &lt;- "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-26-october/"
+speech_page &lt;- read_html(url)
+```
+
+.pull-left[
+
+```r
+speech_page
+```
+
+```
+## {html_document}
+## &lt;html dir="ltr" lang="en"&gt;
+## [1] &lt;head&gt;\n&lt;meta http-equiv="Content-Type" content="text/html ...
+## [2] &lt;body class="fontawesome site-header__container"&gt;\n\n\n\n\ ...
+```
+]
+.pull-right[
+&lt;img src="img/fm-speech-oct-26.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Extract title
+
+.pull-left-wide[
+&lt;br&gt;&lt;br&gt;
+
+```r
+title &lt;- speech_page %&gt;%
+    html_node(".article-header__title") %&gt;%
+    html_text()
+
+title
+```
+
+```
+## [1] "Coronavirus (COVID-19) update: First Minister's speech 26 October"
+```
+]
+.pull-right-narrow[
+&lt;img src="img/title.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Extract date
+
+.pull-left-wide[
+
+```r
+library(lubridate)
+
+speech_page %&gt;%
+    html_node(".content-data__list:nth-child(1) strong") %&gt;%
+    html_text() 
+```
+
+```
+## [1] "26 Oct 2020"
+```
+
+```r
+date &lt;- speech_page %&gt;%
+    html_node(".content-data__list:nth-child(1) strong") %&gt;%
+    html_text() %&gt;%
+    dmy()
+date
+```
+
+```
+## [1] "2020-10-26"
+```
+]
+.pull-right-narrow[
+&lt;img src="img/date.png" width="100%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Similarly...
+
+extract location, abstract, and text
+
+---
+
+## Put it all in a data frame
+
+.pull-left[
+
+
+
+
+```r
+oct_26_speech &lt;- tibble(
+  title    = title,
+  date     = date,
+  location = location,
+  abstract = abstract,
+  text     = text,
+  url      = url
+)
+
+oct_26_speech
+```
+
+```
+## # A tibble: 1 x 6
+##   title       date       location   abstract     text  url       
+##   &lt;chr&gt;       &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;lis&gt; &lt;chr&gt;     
+## 1 Coronaviru… 2020-10-26 St Andrew… Statement g… &lt;chr… https://w…
+```
+]
+.pull-right[
+&lt;img src="img/fm-speech-oct-26.png" width="75%" style="display: block; margin: auto;" /&gt;
+]
+
+---
+
+## Plan: Get data from all pages
+
+- Write a function that scrapes the data from a single page and returns a data frame with a single row for that page
+
+- Obtain a list of URLs of all pages
+
+- Map the function over the list of all URLs to obtain a data framw where each row is a single speech and the number of rows is the number of speeches
+
+
+```
+## # A tibble: 218 x 6
+##    title     date       location   abstract     text     url     
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;    &lt;chr&gt;   
+##  1 Coronavi… 2021-04-20 St Andrew… Statement g… "Good a… https:/…
+##  2 Coronavi… 2021-04-13 St Andrew… Statement g… "Thanks… https:/…
+##  3 Coronavi… 2021-04-06 St Andrew… Statement g… "Good a… https:/…
+##  4 Coronavi… 2021-03-30 St Andrew… Statement g… "Thanks… https:/…
+##  5 Coronavi… 2021-03-24 Scottish … Statement g… "Thank … https:/…
+##  6 Coronavi… 2021-03-23 The Scott… Statement g… "Presid… https:/…
+##  7 Coronavi… 2021-03-18 Scottish … Statement g… "Thank … https:/…
+##  8 Coronavi… 2021-03-17 St Andrew… Statement g… "\nGood… https:/…
+##  9 Coronavi… 2021-03-16 Scottish … Statement g… "Presid… https:/…
+## 10 Coronavi… 2021-03-15 St Andrew… Statement g… "\nGood… https:/…
+## # … with 208 more rows
+```
+
+---
+
+## Write a function
+
+.xsmall[
+
+```r
+scrape_speech_scot &lt;- function(url){
+  
+  speech_page &lt;- read_html(url)
+  
+  title &lt;- speech_page %&gt;%
+    html_node(".article-header__title") %&gt;%
+    html_text()
+  
+  date &lt;- speech_page %&gt;%
+    html_node(".content-data__list:nth-child(1) strong") %&gt;%
+    html_text() %&gt;%
+    dmy()
+  
+  location &lt;- speech_page %&gt;%
+    html_node(".content-data__list+ .content-data__list strong") %&gt;%
+    html_text()
+  
+  abstract &lt;- speech_page %&gt;%
+    html_node(".leader--first-para p") %&gt;%
+    html_text()
+  
+  text &lt;- speech_page %&gt;% 
+    html_nodes("#preamble p") %&gt;%
+    html_text() %&gt;%
+    glue_collapse(sep = " ") %&gt;%
+    as.character()
+  
+  tibble(
+    title    = title,
+    date     = date,
+    location = location,
+    abstract = abstract,
+    text     = text,
+    url      = url
+  )
+  
+}
+```
+]
+
+---
+
+## Get a list of all URLs
+
+
+```r
+all_speeches_page_scot &lt;- read_html("https://www.gov.scot/collections/first-ministers-speeches/")
+
+covid_speech_urls_uk_scot &lt;- all_speeches_page_scot %&gt;%
+  html_nodes(".collections-list a") %&gt;%
+  html_attr("href") %&gt;%
+  str_subset("covid-19") %&gt;%
+  str_c("https://www.gov.scot", .)
+
+covid_speech_urls_uk_scot
+```
+
+```
+##   [1] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-20-april-2021/"             
+##   [2] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-13-april-2021/"             
+##   [3] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-6-april-2021/"              
+##   [4] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-30-march-2021/"             
+##   [5] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-24-march-2021/"             
+##   [6] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-23-march-2021/"             
+##   [7] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-18-march-2021/"             
+##   [8] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-17-march-2021/"             
+##   [9] "https://www.gov.scot/publications/coronavirus-covid-19-update-march-16-2021/"                                       
+##  [10] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-15-march-2021/"             
+##  [11] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-11-march-2021/"             
+##  [12] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-9-march-2021/"              
+##  [13] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-5-march-2021/"              
+##  [14] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-4-march-2021/"              
+##  [15] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-2-march-2021/"              
+##  [16] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-25-february-2021/"          
+##  [17] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-wednesday-24-february-2021/"
+##  [18] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-23-february-2021/"          
+##  [19] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-22-february-2021/"   
+##  [20] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-thursday-18-february-2021/" 
+##  [21] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-17-february-2021/"          
+##  [22] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-16-february-2021/"          
+##  [23] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-15-february-2021/"   
+##  [24] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-thursday-11-february-2021/"    
+##  [25] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-10-february-2021/"          
+##  [26] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-9-february-2021/"           
+##  [27] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-8-february-2021/"           
+##  [28] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-4-february-2021/"           
+##  [29] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-3-february-2021/"           
+##  [30] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-2-february-2021/"           
+##  [31] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-01-february-2021/"          
+##  [32] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-28-january-2021/"           
+##  [33] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-27-january-2021/"           
+##  [34] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-25-january-2021/"           
+##  [35] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-20-january-2021/"           
+##  [36] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-18-january-2021/"           
+##  [37] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-thursday-14-january-2021/"  
+##  [38] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-13-january-2021/"           
+##  [39] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-12-january-2021/"           
+##  [40] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-11-january-2021/"    
+##  [41] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-8-january-2021/"            
+##  [42] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-thursday-7-january-2021/"   
+##  [43] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-5-january-2021/"               
+##  [44] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-4-january-2021/"     
+##  [45] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-30-december-2020/"          
+##  [46] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-22-december-2020/"          
+##  [47] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-21-december/"                  
+##  [48] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech/"                              
+##  [49] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-tuesday-16-december-2020/"     
+##  [50] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-15-december-2020/"          
+##  [51] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-monday-14-december-2020-1/"    
+##  [52] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-friday-11-december-2020/"      
+##  [53] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-9-december-2020/"              
+##  [54] "https://www.gov.scot/publications/first-ministers-statement-scottish-parliament-covid-19-tuesday-8-december-2020/"  
+##  [55] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-7-december-2020/"              
+##  [56] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-2-december-2020/"              
+##  [57] "https://www.gov.scot/publications/first-minister-speech-20201201-parliamentary-statement-covid-19/"                 
+##  [58] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-30112020/"                     
+##  [59] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-25-november-2020/"             
+##  [60] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-tuesday-24-november-2020/"  
+##  [61] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-23-november-2020/"   
+##  [62] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-friday-20-november-2020/"   
+##  [63] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-wednesday-18-november-2020/"
+##  [64] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-tuesday-17-november-2020/"  
+##  [65] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-16-november-2020/"   
+##  [66] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-wednesday-11-november-2020/"
+##  [67] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-10-november-2020/"             
+##  [68] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-monday-9-november-2020/"    
+##  [69] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-friday-6-november-2020/"    
+##  [70] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-4-november-2020/"           
+##  [71] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-3-november-2020/"           
+##  [72] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-02-november/"                  
+##  [73] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-31-october-2020/"           
+##  [74] "https://www.gov.scot/publications/coronavirus-covid-19-update-deputy-first-ministers-speech-30-october/"            
+##  [75] "https://www.gov.scot/publications/coronavirus-covid-19-update-parliament-29-october/"                               
+##  [76] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-28-october/"                   
+##  [77] "https://www.gov.scot/publications/scottish-government-debate-covid-19-scotlands-strategic-framework/"               
+##  [78] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-26-october/"                   
+##  [79] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-23-october/"                   
+##  [80] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-october/"                   
+##  [81] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-21-october/"                   
+##  [82] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-20-october/"                   
+##  [83] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-19-october/"                   
+##  [84] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-16-october-2020/"              
+##  [85] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-15-october-2020/"              
+##  [86] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-14-october-2020/"              
+##  [87] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-13-october-2020/"              
+##  [88] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-12-october-2020/"              
+##  [89] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-9-october-2020/"               
+##  [90] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-7-october-2020/"               
+##  [91] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-6-october-2020/"               
+##  [92] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-5-october-2020/"               
+##  [93] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-2-october-2020/"               
+##  [94] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-30-september-2020/"            
+##  [95] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-29-september-2020/"            
+##  [96] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-28-september-2020/"            
+##  [97] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-25-september-2020/"            
+##  [98] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-23-september-2020/"            
+##  [99] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-september-2020/"            
+## [100] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-21-september-2020/"            
+## [101] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-18-september-2020/"            
+## [102] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-16-september-2020/"            
+## [103] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-15-september-2020/"            
+## [104] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-14-september-2020/"            
+## [105] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-11-september-2020/"            
+## [106] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-9-september-2020/"             
+## [107] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-8-september-2020/"             
+## [108] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-7-september-2020/"             
+## [109] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-3-september-2020/"             
+## [110] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-31-august-2020/"               
+## [111] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-28-august-2020/"               
+## [112] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-27-august-2020/"               
+## [113] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-25-august-2020/"               
+## [114] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-24-august-2020/"               
+## [115] "https://www.gov.scot/publications/coronavirus-covid-19-first-ministers-speech-21-august-2020/"                      
+## [116] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-20-august-2020/"               
+## [117] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-19-august-2020/"               
+## [118] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-18-august-2020/"               
+## [119] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-17-august-2020/"               
+## [120] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-14-august-2020/"               
+## [121] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-08-june-2020/"                 
+## [122] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-11-august-2020/"               
+## [123] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-10-august-2020/"               
+## [124] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-6-august-2020/"                
+## [125] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-5-august-2020/"                
+## [126] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-4-august-2020/"                
+## [127] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-3-august-2020/"                
+## [128] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-31st-july/"                    
+## [129] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-29-july-2020/"                 
+## [130] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-28-july-2020/"                 
+## [131] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-23-july-2020/"                 
+## [132] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-july-2020/"                 
+## [133] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-21-july-2020/"                 
+## [134] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-16-july-2020/"                 
+## [135] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-15-july-2020/"                 
+## [136] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-14-july-2020/"                 
+## [137] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-13-july-2020/"                 
+## [138] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-10-july-2020/"                 
+## [139] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-8-july-2020/"                  
+## [140] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-7-july-2020/"                  
+## [141] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-6-july-2020/"                  
+## [142] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-3-july-2020/"                  
+## [143] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-2-july-2020/"                  
+## [144] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-1-july-2020/"                  
+## [145] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-30-june-2020/"                 
+## [146] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-29-june-2020/"                 
+## [147] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-26-june-2020/"                 
+## [148] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-25-june-2020/"                 
+## [149] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-24-june-2020/"                 
+## [150] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-23-june-2020/"                 
+## [151] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-june-2020/"                 
+## [152] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-19-june-2020/"                 
+## [153] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-16-june-2020/"                 
+## [154] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-15-june-2020/"                 
+## [155] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-08-june-2020-1/"               
+## [156] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-12-june-2020/"                 
+## [157] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-11-june-2020/"                 
+## [158] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-09-june-2020/"                 
+## [159] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-08-june-2020-2/"               
+## [160] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-05-june-2020/"                 
+## [161] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-04-june-2020/"                 
+## [162] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-02-june-2020/"                 
+## [163] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-01-june-2020/"                 
+## [164] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-29-2020/"                      
+## [165] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-28-2020/"                      
+## [166] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-26-2020/"                      
+## [167] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-25-2020/"                      
+## [168] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-2020/"                      
+## [169] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-21-2020/"                      
+## [170] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-19-2020/"                      
+## [171] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-18-2020/"                      
+## [172] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-14-2020/"                      
+## [173] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-minister-speech-14-2020/"                       
+## [174] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-12-2020/"                      
+## [175] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-11-2020/"                      
+## [176] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-10-2020/"                      
+## [177] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-08-2020/"                      
+## [178] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-minister-speech-7-may-2020/"                    
+## [179] "https://www.gov.scot/publications/coronavirus-covid-19-first-ministers-speech-5-2020/"                              
+## [180] "https://www.gov.scot/publications/coronavirus-covid-19/"                                                            
+## [181] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-1-2020/"                       
+## [182] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-30-april-2020/"                
+## [183] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-29-april-2020/"                
+## [184] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-27-april-2020-1/"              
+## [185] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-27-april-2020/"                
+## [186] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-friday-24-april/"              
+## [187] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-23-april/"                     
+## [188] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-april/"                     
+## [189] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-21-april-2020/"                
+## [190] "https://www.gov.scot/publications/first-minister-covid-19-update-20-april-2020/"                                    
+## [191] "https://www.gov.scot/publications/health-secretary-covid-19-update-19-april-2020/"                                  
+## [192] "https://www.gov.scot/publications/first-minister-covid-19-update-17-april-2020/"                                    
+## [193] "https://www.gov.scot/publications/first-minister-covid-19-update-17/"                                               
+## [194] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-15-april-2020/"                
+## [195] "https://www.gov.scot/publications/first-minister-covid-19-update-16/"                                               
+## [196] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-13-april-2020/"                
+## [197] "https://www.gov.scot/publications/coronavirus-covid-19-update-health-secretary-12-april-2020/"                      
+## [198] "https://www.gov.scot/publications/first-minister-covid-19-update-8/"                                                
+## [199] "https://www.gov.scot/publications/first-minister-covid-19-update-7/"                                                
+## [200] "https://www.gov.scot/publications/first-minister-covid-19-update-14/"                                               
+## [201] "https://www.gov.scot/publications/first-minister-covid-19-update-13/"                                               
+## [202] "https://www.gov.scot/publications/first-minister-covid-19-update-12/"                                               
+## [203] "https://www.gov.scot/publications/first-minister-covid-19-update-11/"                                               
+## [204] "https://www.gov.scot/publications/first-minister-covid-19-update-9/"                                                
+## [205] "https://www.gov.scot/publications/first-minister-covid-19-update-10/"                                               
+## [206] "https://www.gov.scot/publications/first-minister-covid-19-update-15/"                                               
+## [207] "https://www.gov.scot/publications/first-minister-covid-19-update-6/"                                                
+## [208] "https://www.gov.scot/publications/first-minister-covid-19-update-5/"                                                
+## [209] "https://www.gov.scot/publications/ministerial-statement-on-access-rights-during-covid-19/"                          
+## [210] "https://www.gov.scot/publications/first-minister-covid-19-update-4/"                                                
+## [211] "https://www.gov.scot/publications/first-minister-covid-19-update-3/"                                                
+## [212] "https://www.gov.scot/publications/first-minister-covid-19-update-2/"                                                
+## [213] "https://www.gov.scot/publications/first-ministers-update-covid-19/"                                                 
+## [214] "https://www.gov.scot/publications/first-minister-covid-19-update-1/"                                                
+## [215] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-speech-22-march-2020/"                
+## [216] "https://www.gov.scot/publications/first-minister-covid-19-update/"                                                  
+## [217] "https://www.gov.scot/publications/fm-covid-19/"                                                                     
+## [218] "https://www.gov.scot/publications/coronavirus-covid-19-update-first-ministers-statement-15-december-2020/"
+```
+
+---
+
+## Map the function over all URLs
+
+
+```r
+covid_speeches_scot &lt;- map_dfr(covid_speech_urls_uk_scot, scrape_speech_scot)
+```
+
+
+```r
+covid_speeches_scot
+```
+
+```
+## # A tibble: 218 x 6
+##    title     date       location   abstract     text     url     
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;    &lt;chr&gt;   
+##  1 Coronavi… 2021-04-20 St Andrew… Statement g… "Good a… https:/…
+##  2 Coronavi… 2021-04-13 St Andrew… Statement g… "Thanks… https:/…
+##  3 Coronavi… 2021-04-06 St Andrew… Statement g… "Good a… https:/…
+##  4 Coronavi… 2021-03-30 St Andrew… Statement g… "Thanks… https:/…
+##  5 Coronavi… 2021-03-24 Scottish … Statement g… "Thank … https:/…
+##  6 Coronavi… 2021-03-23 The Scott… Statement g… "Presid… https:/…
+##  7 Coronavi… 2021-03-18 Scottish … Statement g… "Thank … https:/…
+##  8 Coronavi… 2021-03-17 St Andrew… Statement g… "\nGood… https:/…
+##  9 Coronavi… 2021-03-16 Scottish … Statement g… "Presid… https:/…
+## 10 Coronavi… 2021-03-15 St Andrew… Statement g… "\nGood… https:/…
+## # … with 208 more rows
+```
+
+---
+
+class: middle
+
+# Transform and visualise
+
+---
+
+## Filter for First minister speeches
+
+
+```r
+covid_speeches_scot &lt;- covid_speeches_scot %&gt;%
+  filter(str_detect(abstract, "First Minister"))
+
+covid_speeches_scot
+```
+
+```
+## # A tibble: 215 x 6
+##    title     date       location   abstract     text     url     
+##    &lt;chr&gt;     &lt;date&gt;     &lt;chr&gt;      &lt;chr&gt;        &lt;chr&gt;    &lt;chr&gt;   
+##  1 Coronavi… 2021-04-20 St Andrew… Statement g… "Good a… https:/…
+##  2 Coronavi… 2021-04-13 St Andrew… Statement g… "Thanks… https:/…
+##  3 Coronavi… 2021-04-06 St Andrew… Statement g… "Good a… https:/…
+##  4 Coronavi… 2021-03-30 St Andrew… Statement g… "Thanks… https:/…
+##  5 Coronavi… 2021-03-24 Scottish … Statement g… "Thank … https:/…
+##  6 Coronavi… 2021-03-23 The Scott… Statement g… "Presid… https:/…
+##  7 Coronavi… 2021-03-18 Scottish … Statement g… "Thank … https:/…
+##  8 Coronavi… 2021-03-17 St Andrew… Statement g… "\nGood… https:/…
+##  9 Coronavi… 2021-03-16 Scottish … Statement g… "Presid… https:/…
+## 10 Coronavi… 2021-03-15 St Andrew… Statement g… "\nGood… https:/…
+## # … with 205 more rows
+```
+
+---
+
+## Count number of words in each speech
+
+
+```r
+covid_speeches_scot &lt;- covid_speeches_scot %&gt;%
+  rowwise() %&gt;%
+  mutate(n_words = text %&gt;% str_count("\\w+") %&gt;% sum()) %&gt;%
+  ungroup()
+
+covid_speeches_scot
+```
+
+```
+## # A tibble: 215 x 7
+##    title   date       location  abstract   text    url    n_words
+##    &lt;chr&gt;   &lt;date&gt;     &lt;chr&gt;     &lt;chr&gt;      &lt;chr&gt;   &lt;chr&gt;    &lt;int&gt;
+##  1 Corona… 2021-04-20 St Andre… Statement… "Good … https…    2997
+##  2 Corona… 2021-04-13 St Andre… Statement… "Thank… https…    2719
+##  3 Corona… 2021-04-06 St Andre… Statement… "Good … https…    2707
+##  4 Corona… 2021-03-30 St Andre… Statement… "Thank… https…    1753
+##  5 Corona… 2021-03-24 Scottish… Statement… "Thank… https…     623
+##  6 Corona… 2021-03-23 The Scot… Statement… "Presi… https…    3055
+##  7 Corona… 2021-03-18 Scottish… Statement… "Thank… https…     612
+##  8 Corona… 2021-03-17 St Andre… Statement… "\nGoo… https…    2131
+##  9 Corona… 2021-03-16 Scottish… Statement… "Presi… https…    3355
+## 10 Corona… 2021-03-15 St Andre… Statement… "\nGoo… https…    2081
+## # … with 205 more rows
+```
+
+---
+
+## Length of speech over time
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/words-over-time-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+ggplot(covid_speeches_scot, aes(x = date, y = n_words)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(aes(x = date, y = n_words), method = lm, formula = y ~ x)
+```
+]
+]
+
+---
+
+## Better plotting setup
+
+
+```r
+# Set a theme for all plots in session/document
+theme_set(theme_minimal(base_size = 16))
+
+# Set colors
+# Blue of Scottish flag
+# https://www.schemecolor.com/flag-of-scotland-colors.php
+scotblue &lt;- "#0065BF" 
+
+# Red of UK flag
+# https://www.colorexpertsbd.com/blog/all-nations-flags-hex-codes-guideline/
+ukred    &lt;- "#C8102E" 
+
+# Custom light blue (positive) and red (negative)
+light_blue &lt;- "#569BBD"
+light_red  &lt;- "#F05133"
+```
+
+---
+
+## Length of speech over time, again
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/words-over-time-better-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+.panel[.panel-name[Code]
+
+```r
+lm_words &lt;- lm(n_words ~ date, data = covid_speeches_scot)
+lm_words_rsq &lt;- glance(lm_words)$r.squared
+
+covid_speeches_scot %&gt;%
+  ggplot(aes(x = date, y = n_words)) +
+  geom_point(color = scotblue, alpha = 0.7) +
+  geom_smooth(aes(x = date, y = n_words), 
+              method = lm, formula = y ~ x, color = "darkgray") +
+  labs(
+    title = "Length of Scotland COVID-19 speeches",
+    subtitle = glue::glue("Measured in number of words, R-squared = {percent(lm_words_rsq)}"),
+    x = NULL, y = "Number of words", color = NULL, shape = NULL
+  )
+```
+]
+]
+
+---
+
+## tidytext
+
+.pull-left[
+- Using tidy data principles can make many text mining tasks easier, more effective, and consistent with tools already in wide use
+- Learn more at [tidytextmining.com](https://www.tidytextmining.com/)
+
+```r
+library(tidytext)
+```
+
+]
+.pull-right[
+&lt;img src="img/tidytext.png" width="60%" style="display: block; margin: auto auto auto 0;" /&gt;
+]
+
+---
+
+## Tokenize speeches by word
+
+.panelset[
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot_words &lt;- covid_speeches_scot %&gt;%
+  # make sure COVID-19 (and all its various spellings) don't get split
+  # tidytext doesn't remove underscores
+  # https://stackoverflow.com/questions/58281091/preserve-hyphenated-words-in-ngrams-analysis-with-tidytext
+  mutate(
+    text = str_replace_all(text, "COVID-19", "COVID_19"),
+    text = str_replace_all(text, "COVID 19", "COVID_19"),
+    text = str_replace_all(text, "Covid-19", "COVID_19"),
+    text = str_replace_all(text, "Covid 19", "COVID_19")
+  ) %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  relocate(date, word)
+
+covid_speeches_scot_words %&gt;% print(n = 15)
+```
+]
+
+.panel[.panel-name[Output]
+
+```
+## # A tibble: 445,221 x 7
+##    date       word   title    location abstract   url     n_words
+##    &lt;date&gt;     &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;     &lt;int&gt;
+##  1 2021-04-20 good   Coronav… St Andr… Statement… https:…    2997
+##  2 2021-04-20 after… Coronav… St Andr… Statement… https:…    2997
+##  3 2021-04-20 thanks Coronav… St Andr… Statement… https:…    2997
+##  4 2021-04-20 for    Coronav… St Andr… Statement… https:…    2997
+##  5 2021-04-20 tuning Coronav… St Andr… Statement… https:…    2997
+##  6 2021-04-20 in     Coronav… St Andr… Statement… https:…    2997
+##  7 2021-04-20 today  Coronav… St Andr… Statement… https:…    2997
+##  8 2021-04-20 i      Coronav… St Andr… Statement… https:…    2997
+##  9 2021-04-20 am     Coronav… St Andr… Statement… https:…    2997
+## 10 2021-04-20 joined Coronav… St Andr… Statement… https:…    2997
+## 11 2021-04-20 by     Coronav… St Andr… Statement… https:…    2997
+## 12 2021-04-20 the    Coronav… St Andr… Statement… https:…    2997
+## 13 2021-04-20 chief  Coronav… St Andr… Statement… https:…    2997
+## 14 2021-04-20 medic… Coronav… St Andr… Statement… https:…    2997
+## 15 2021-04-20 offic… Coronav… St Andr… Statement… https:…    2997
+## # … with 445,206 more rows
+```
+]
+]
+
+---
+
+## Common words
+
+
+```r
+covid_speeches_scot_words %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 8,572 x 2
+##    word      n
+##    &lt;chr&gt; &lt;int&gt;
+##  1 the   20455
+##  2 to    17134
+##  3 of    13526
+##  4 and   13429
+##  5 that  11162
+##  6 in     9112
+##  7 we     8260
+##  8 is     6992
+##  9 a      6700
+## 10 i      5929
+## # … with 8,562 more rows
+```
+
+---
+
+## Common words, without stop words
+
+
+```r
+covid_speeches_scot_words &lt;- covid_speeches_scot_words %&gt;%
+  anti_join(stop_words)
+
+covid_speeches_scot_words %&gt;%
+  count(word, sort = TRUE)
+```
+
+```
+## # A tibble: 7,990 x 2
+##    word             n
+##    &lt;chr&gt;        &lt;int&gt;
+##  1 people        2866
+##  2 virus         1711
+##  3 scotland      1344
+##  4 yesterday     1044
+##  5 restrictions   980
+##  6 care           958
+##  7 health         947
+##  8 total          926
+##  9 covid          892
+## 10 deaths         885
+## # … with 7,980 more rows
+```
+
+---
+
+## Find common words
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/scot-common-words-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+threshold &lt;- 500
+
+covid_speeches_scot_words %&gt;%
+  count(word, sort = TRUE) %&gt;%
+  filter(n &gt; threshold) %&gt;%
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = log(n))) +
+  geom_col(show.legend = FALSE) +
+  labs(
+    title = "Frequency of words in Scotland COVID-19 briefings",
+    subtitle = glue("Words occurring more than {threshold} times"),
+    y = NULL, x = NULL
+  )
+```
+]
+]
+
+---
+
+## Sentiment analysis
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/sentiment-bing-with-positive-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  inner_join(get_sentiments("bing"), by = "word") %&gt;%
+  count(sentiment, word, sort = TRUE) %&gt;%
+  group_by(sentiment) %&gt;%
+  slice_head(n = 20) %&gt;%
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free") +
+  labs(
+    title = "Sentiment and frequency of words",
+    subtitle = "Scotland COVID-19 briefings",
+    y = NULL, x = NULL,
+    caption = "Sentiment assignment uses the Bing lexicon"
+  ) +
+  scale_fill_manual(values = c(light_red, light_blue))
+```
+]
+]
+
+---
+
+## Sentiment analysis, again
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/sentiment-bing-without-positive-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  filter(word != "positive") %&gt;%
+  inner_join(get_sentiments("bing"), by = "word") %&gt;%
+  count(sentiment, word, sort = TRUE) %&gt;%
+  group_by(sentiment) %&gt;%
+  slice_head(n = 20) %&gt;%
+  ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free") +
+  labs(
+    title = "Sentiment and frequency of words",
+    subtitle = "Scotland COVID-19 briefings",
+    y = NULL, x = NULL,
+    caption = "Sentiment assignment uses the Bing lexicon and the word 'positive' is removed"
+  ) +
+  scale_fill_manual(values = c(light_red, light_blue))
+```
+]
+]
+
+---
+
+## Sentiment over time
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/sentiment-bing-over-time-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  filter(word != "positive") %&gt;%
+  inner_join(get_sentiments("bing"), by = "word") %&gt;%
+  count(date, sentiment) %&gt;%
+  pivot_wider(names_from = sentiment, values_from = n) %&gt;%
+  mutate(sentiment = positive - negative) %&gt;%
+  ggplot(aes(x = date, y = sentiment)) +
+  geom_smooth(color = "gray", method = "loess", formula = y ~ x) +
+  geom_point(aes(color = sentiment &gt; 0, shape = sentiment &gt; 0), size = 2, alpha = 0.8, show.legend = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
+  labs(
+    title = "Sentiment in Scotland COVID-19 briefings",
+    subtitle = "Sentiment score calculated as the number of positive - the number of negative \nwords in each briefing",
+    x = "Date of briefing", y = "Sentiment score (positive - negative)",
+    caption = "Sentiment assignment uses the Bing lexicon and the word 'positive' is removed"
+  ) +
+  scale_color_manual(values = c(light_red, light_blue))
+```
+]
+]
+
+---
+
+## Social vs. physical distancing
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/social-physical-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot %&gt;%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2) %&gt;%
+  filter(str_detect(bigram, "social dist|physical dist")) %&gt;%
+  mutate(soc_phys = if_else(str_detect(bigram, "social"), "S", "P")) %&gt;%
+  count(date, soc_phys) %&gt;%
+  ggplot(aes(x = date, y = n, color = soc_phys)) +
+  geom_text(aes(label = soc_phys), show.legend = FALSE) +
+  labs(
+    x = "Date", y = "Frequency",
+    title = "Social (S) vs. physical (P) distancing",
+    subtitle = "Number of mentions over time in Scotland briefings"
+  ) +
+  scale_color_manual(values = c(scotblue, "darkgray")) +
+  scale_y_continuous(limits = c(0, 10), breaks = seq(0, 10, 2))
+```
+]
+]
+
+---
+
+## Vaccines
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/vaccines-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  filter(str_detect(word, "[Vv]accin|\\b[Jj]abs?\\b")) %&gt;%
+  count(date) %&gt;%
+  ggplot(aes(x = date, y = n)) +
+  geom_line(size = 0.3, color = "gray") +
+  geom_smooth(size = 0.5, color = light_red, se = FALSE, span = 0.4) +
+  geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
+  labs(
+    x = "Date", y = "Frequency",
+    title = "Number of times anything related to vaccination is mentioned",
+    subtitle = "Scotland briefings"
+  ) +
+  expand_limits(y = 0)
+```
+]
+]
+
+---
+
+## Pubs
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/pubs-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_speeches_scot_words %&gt;%
+  filter(str_detect(word, "\\b[Pp]ubs?\\b")) %&gt;%
+  count(date) %&gt;%
+  ggplot(aes(x = date, y = n)) +
+  geom_line(size = 0.3, color = "gray") +
+  geom_text(aes(label = "🍺", size = n, group = 1), show.legend = FALSE) +
+  labs(
+    x = "Date", y = "Frequency",
+    title = 'Number of times "pub(s)" is mentioned',
+    subtitle = "Scotland briefings"
+  ) +
+  expand_limits(y = c(0, 15)) +
+  annotate(
+    "text",
+    x = ymd("2020-08-14") + days(10), y = 13,
+    label = "2020-08-14\nOutbreak in Aberdeen, linked to pubs",
+    hjust = 0, size = 4
+  )
+```
+]
+]
+
+---
+
+## Compare to UK
+
+&lt;img src="thats-what-nicola-said_files/figure-html/unnamed-chunk-42-1.png" width="85%" style="display: block; margin: auto;" /&gt;
+
+---
+
+class: middle
+
+# Model
+
+---
+
+## Predicting UK vs. Scotland
+
+
+
+A lot more Scotland briefings than UK, which creates an **imbalance**
+
+
+|origin   | number of briefings|
+|:--------|-------------------:|
+|Scotland |                 218|
+|UK       |                  50|
+
+---
+
+## Tokenize into sentences
+
+
+```r
+covid_speeches_sentences &lt;- covid_speeches %&gt;%
+  unnest_tokens(sentence, text, token = "sentences")
+
+covid_speeches_sentences %&gt;%
+  relocate(sentence)
+```
+
+```
+## # A tibble: 21,723 x 4
+##    sentence                           speech_id date       origin
+##    &lt;chr&gt;                              &lt;chr&gt;     &lt;date&gt;     &lt;fct&gt; 
+##  1 good afternoon, thanks for tuning… 1         2021-04-20 Scotl…
+##  2 i am joined by the chief medical … 1         2021-04-20 Scotl…
+##  3 as you  probably know the main pu… 1         2021-04-20 Scotl…
+##  4 these changes include the full re… 1         2021-04-20 Scotl…
+##  5 before i talk in a bit more detai… 1         2021-04-20 Scotl…
+##  6 the total number of cases reporte… 1         2021-04-20 Scotl…
+##  7 which is 1.4% of the total number… 1         2021-04-20 Scotl…
+##  8 and 13 people are in intensive ca… 1         2021-04-20 Scotl…
+##  9 unfortunately 2 deaths were repor… 1         2021-04-20 Scotl…
+## 10 and yet again, i want to send my … 1         2021-04-20 Scotl…
+## # … with 21,713 more rows
+```
+
+---
+
+## Definite imbalance!
+
+- Similarly, a lot more sentences in Scotland briefings than UK
+
+- We'll use downsampling to account for this
+
+
+|origin   | number of sentences|
+|:--------|-------------------:|
+|Scotland |               19768|
+|UK       |                1955|
+
+---
+
+## tidymodels
+
+.pull-left[
+&lt;img src="img/tidymodels.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+
+.pull-right[
+.center[.large[
+[tidymodels.org](https://www.tidymodels.org/)
+]]
+
+- The **tidymodels** framework is a collection of packages for modeling and machine learning using **tidyverse** principles.
+- All packages share an underlying philosophy and a common grammar
+]
+
+---
+
+class: middle
+
+&lt;img src="img/tidymodels-packages.png" width="90%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## Split into testing and training
+
+
+```r
+set.seed(1234)
+covid_split &lt;- initial_split(covid_speeches_sentences, strata = origin)
+covid_train &lt;- training(covid_split)
+covid_test  &lt;- testing(covid_split)
+```
+
+
+```r
+dim(covid_train)
+```
+
+```
+## [1] 16293     4
+```
+
+```r
+dim(covid_test)
+```
+
+```
+## [1] 5430    4
+```
+
+---
+
+## Specify a model (with tuning)
+
+
+```r
+lasso_mod_tune &lt;- logistic_reg(penalty = tune(), mixture = 1) %&gt;%
+  set_engine("glmnet") %&gt;% 
+  set_mode("classification")
+
+lasso_mod_tune
+```
+
+```
+## Logistic Regression Model Specification (classification)
+## 
+## Main Arguments:
+##   penalty = tune()
+##   mixture = 1
+## 
+## Computational engine: glmnet
+```
+
+---
+
+## Build a recipe (with tuning)
+
+.panelset[
+.panel[.panel-name[Code]
+
+```r
+covid_rec_tune_ds &lt;- recipe(origin ~ sentence, data = covid_train) %&gt;%
+  themis::step_downsample(origin) %&gt;%
+  textrecipes::step_tokenize(sentence, token = "words") %&gt;%
+  textrecipes::step_stopwords(sentence) %&gt;%
+  textrecipes::step_ngram(sentence, num_tokens = 3, min_num_tokens = 1) %&gt;%
+  # keep the ?? most frequent words to avoid creating too many variables 
+  textrecipes::step_tokenfilter(sentence, max_tokens = tune(), min_times = 5) %&gt;%
+  textrecipes::step_tfidf(sentence)
+```
+]
+
+.panel[.panel-name[Output]
+
+```r
+covid_rec_tune_ds
+```
+
+```
+## Data Recipe
+## 
+## Inputs:
+## 
+##       role #variables
+##    outcome          1
+##  predictor          1
+## 
+## Operations:
+## 
+## Down-sampling based on origin
+## Tokenization for sentence
+## Stop word removal for sentence
+## ngramming for sentence
+## Text filtering for sentence
+## Term frequency-inverse document frequency with sentence
+```
+]
+]
+
+---
+
+## Build a workflow
+
+.panelset[
+.panel[.panel-name[Code]
+
+```r
+covid_wflow_tune_ds &lt;- workflow() %&gt;%
+  add_model(lasso_mod_tune) %&gt;%
+  add_recipe(covid_rec_tune_ds)
+```
+]
+
+.panel[.panel-name[Output]
+.small[
+
+```r
+covid_wflow_tune_ds
+```
+
+```
+## ══ Workflow ═════════════════════════════════════════════════════
+## Preprocessor: Recipe
+## Model: logistic_reg()
+## 
+## ── Preprocessor ─────────────────────────────────────────────────
+## 6 Recipe Steps
+## 
+## ● step_downsample()
+## ● step_tokenize()
+## ● step_stopwords()
+## ● step_ngram()
+## ● step_tokenfilter()
+## ● step_tfidf()
+## 
+## ── Model ────────────────────────────────────────────────────────
+## Logistic Regression Model Specification (classification)
+## 
+## Main Arguments:
+##   penalty = tune()
+##   mixture = 1
+## 
+## Computational engine: glmnet
+```
+]
+]
+]
+
+---
+
+## Possible set of hyperparameters to tune
+
+.panelset[
+.panel[.panel-name[Code]
+
+```r
+param_grid &lt;- grid_regular(
+  penalty(range = c(-4, 0)),
+  max_tokens(range = c(500, 1500)),
+  levels = 5
+)
+```
+]
+
+.panel[.panel-name[Output]
+
+```r
+param_grid
+```
+
+```
+## # A tibble: 25 x 2
+##    penalty max_tokens
+##      &lt;dbl&gt;      &lt;int&gt;
+##  1  0.0001        500
+##  2  0.001         500
+##  3  0.01          500
+##  4  0.1           500
+##  5  1             500
+##  6  0.0001        750
+##  7  0.001         750
+##  8  0.01          750
+##  9  0.1           750
+## 10  1             750
+## # … with 15 more rows
+```
+]
+]
+
+---
+
+## Create folds for cross validation
+
+
+```r
+set.seed(1234)
+covid_folds &lt;- vfold_cv(covid_train, v = 10, strata = origin)
+
+covid_folds
+```
+
+```
+## #  10-fold cross-validation using stratification 
+## # A tibble: 10 x 2
+##    splits               id    
+##    &lt;list&gt;               &lt;chr&gt; 
+##  1 &lt;split [14663/1630]&gt; Fold01
+##  2 &lt;split [14663/1630]&gt; Fold02
+##  3 &lt;split [14663/1630]&gt; Fold03
+##  4 &lt;split [14664/1629]&gt; Fold04
+##  5 &lt;split [14664/1629]&gt; Fold05
+##  6 &lt;split [14664/1629]&gt; Fold06
+##  7 &lt;split [14664/1629]&gt; Fold07
+##  8 &lt;split [14664/1629]&gt; Fold08
+##  9 &lt;split [14664/1629]&gt; Fold09
+## 10 &lt;split [14664/1629]&gt; Fold10
+```
+
+---
+
+
+
+## Train models 
+
+
+```r
+set.seed(24)
+covid_fit_rs_tune_ds &lt;- tune_grid(
+  covid_wflow_tune_ds,
+  resamples = covid_folds,
+  grid = param_grid, 
+  control = control_grid(save_pred = TRUE)
+)
+```
+
+
+```r
+covid_fit_rs_tune_ds
+```
+
+```
+## # Tuning results
+## # 10-fold cross-validation using stratification 
+## # A tibble: 10 x 5
+##    splits       id     .metrics      .notes      .predictions    
+##    &lt;list&gt;       &lt;chr&gt;  &lt;list&gt;        &lt;list&gt;      &lt;list&gt;          
+##  1 &lt;split [146… Fold01 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  2 &lt;split [146… Fold02 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  3 &lt;split [146… Fold03 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  4 &lt;split [146… Fold04 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  5 &lt;split [146… Fold05 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  6 &lt;split [146… Fold06 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  7 &lt;split [146… Fold07 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  8 &lt;split [146… Fold08 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+##  9 &lt;split [146… Fold09 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+## 10 &lt;split [146… Fold10 &lt;tibble[,6] … &lt;tibble[,1… &lt;tibble[,8] [40…
+```
+
+---
+
+## View model metrics
+
+
+```r
+collect_metrics(covid_fit_rs_tune_ds)
+```
+
+```
+## # A tibble: 50 x 8
+##    penalty max_tokens .metric  .estimator  mean     n std_err
+##      &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;
+##  1  0.0001        500 accuracy binary     0.726    10 0.00397
+##  2  0.0001        500 roc_auc  binary     0.823    10 0.00548
+##  3  0.001         500 accuracy binary     0.732    10 0.00359
+##  4  0.001         500 roc_auc  binary     0.829    10 0.00548
+##  5  0.01          500 accuracy binary     0.780    10 0.00786
+##  6  0.01          500 roc_auc  binary     0.835    10 0.00355
+##  7  0.1           500 accuracy binary     0.500    10 0.136  
+##  8  0.1           500 roc_auc  binary     0.5      10 0      
+##  9  1             500 accuracy binary     0.500    10 0.136  
+## 10  1             500 roc_auc  binary     0.5      10 0      
+## # … with 40 more rows, and 1 more variable: .config &lt;chr&gt;
+```
+
+---
+
+## View best 5 models
+
+
+```r
+covid_fit_rs_tune_ds %&gt;%
+  show_best("roc_auc")
+```
+
+```
+## # A tibble: 5 x 8
+##   penalty max_tokens .metric .estimator  mean     n std_err
+##     &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;
+## 1   0.01        1500 roc_auc binary     0.875    10 0.00388
+## 2   0.01        1250 roc_auc binary     0.871    10 0.00401
+## 3   0.01        1000 roc_auc binary     0.867    10 0.00436
+## 4   0.01         750 roc_auc binary     0.856    10 0.00333
+## 5   0.001       1500 roc_auc binary     0.856    10 0.00350
+## # … with 1 more variable: .config &lt;chr&gt;
+```
+
+---
+
+## Select "best" model
+
+
+```r
+best_roc_auc_ds &lt;- select_best(covid_fit_rs_tune_ds, "roc_auc")
+
+best_roc_auc_ds
+```
+
+```
+## # A tibble: 1 x 3
+##   penalty max_tokens .config             
+##     &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;               
+## 1    0.01       1500 Preprocessor5_Model3
+```
+
+---
+
+## Evaluate best model
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/roc-folds-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+collect_predictions(covid_fit_rs_tune_ds, parameters = best_roc_auc_ds) %&gt;%
+  group_by(id) %&gt;%
+  roc_curve(truth = origin, .pred_Scotland) %&gt;%
+  autoplot() +
+  labs(
+    title = "ROC curve for Scotland &amp; UK COVID speeches",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+```
+]
+]
+
+---
+
+## Finalize!
+
+
+
+
+```r
+covid_wflow_final_ds &lt;- finalize_workflow(covid_wflow_tune_ds, best_roc_auc_ds)
+
+covid_fit_final_ds &lt;- last_fit(
+  covid_wflow_final_ds, 
+  covid_split
+)
+```
+
+
+```r
+covid_fit_final_ds
+```
+
+```
+## # Resampling results
+## # Manual resampling 
+## # A tibble: 1 x 6
+##   splits    id       .metrics   .notes   .predictions   .workflow
+##   &lt;list&gt;    &lt;chr&gt;    &lt;list&gt;     &lt;list&gt;   &lt;list&gt;         &lt;list&gt;   
+## 1 &lt;split [… train/t… &lt;tibble[,… &lt;tibble… &lt;tibble[,6] [… &lt;workflo…
+```
+
+
+---
+
+## View final model metrics
+
+
+```r
+covid_fit_final_ds %&gt;%
+  collect_metrics()
+```
+
+```
+## # A tibble: 2 x 4
+##   .metric  .estimator .estimate .config             
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               
+## 1 accuracy binary         0.803 Preprocessor1_Model1
+## 2 roc_auc  binary         0.878 Preprocessor1_Model1
+```
+
+---
+
+## ROC curve for final model
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/roc-final-1.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+]
+
+.panel[.panel-name[Code]
+
+```r
+covid_fit_final_ds %&gt;%
+  collect_predictions() %&gt;%
+  roc_curve(truth = origin, .pred_Scotland) %&gt;%
+  autoplot() +
+  labs(title = "ROC curve for final model")
+```
+]
+]
+
+---
+
+## Variable importance
+
+.panelset[
+.panel[.panel-name[Code]
+
+```r
+vi_data_ds &lt;- covid_wflow_tune_ds %&gt;%
+  fit(covid_train) %&gt;%
+  pull_workflow_fit() %&gt;%
+  vip::vi(lambda = best_roc_auc$penalty) %&gt;%
+  mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %&gt;%
+  filter(Importance != 0)
+)
+```
+]
+
+.panel[.panel-name[Output]
+
+
+
+```r
+vi_data_ds
+```
+
+```
+## # A tibble: 506 x 3
+##    Variable     Importance Sign 
+##    &lt;chr&gt;             &lt;dbl&gt; &lt;chr&gt;
+##  1 scotland           6.21 NEG  
+##  2 coronavirus        5.87 POS  
+##  3 covid_secure       4.93 POS  
+##  4 mr                 4.69 POS  
+##  5 british            4.22 POS  
+##  6 total_number       4.15 NEG  
+##  7 alert              3.82 POS  
+##  8 level_4            3.82 NEG  
+##  9 28_days            3.59 NEG  
+## 10 vaccines           3.56 POS  
+## # … with 496 more rows
+```
+]
+]
+
+---
+
+.panelset[
+.panel[.panel-name[Plot]
+&lt;img src="thats-what-nicola-said_files/figure-html/vip-1.png" width="60%" style="display: block; margin: auto;" /&gt;
+]
+
+.panel[.panel-name[Code]
+
+```r
+vi_data_ds %&gt;%
+  mutate(Importance = abs(Importance)) %&gt;%
+  filter(Importance != 0) %&gt;%
+  group_by(Sign) %&gt;%
+  slice_head(n = 40) %&gt;%
+  ungroup() %&gt;%
+  mutate(pred_origin = if_else(Sign == "POS", "UK", "Scotland")) %&gt;% 
+  ggplot(aes(x = Importance, y = fct_reorder(Variable, Importance), fill = pred_origin)) +
+  geom_col(show.legend = FALSE) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = c(scotblue, ukred)) +
+  facet_wrap(~pred_origin, scales = "free") +
+  labs(y = NULL, title = "Variable importance")
+```
+]
+]
+
+---
+
+## Prediction - sentence containing "physical"
+
+
+
+
+|                                                                                                                                                                                                                              |
+|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|contrary to some suggestions that you might have seen in the media, the requirements on physical distancing for hospitality, in our latest guidance on this, have not changed from the guidance that was in place previously. |
+
+--
+
+
+```r
+scot_sentence_physical %&gt;%
+  tidytext::unnest_tokens(words, sentence) %&gt;%
+  left_join(vi_data_ds, by = c("words" = "Variable")) %&gt;%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %&gt;%
+  filter(!is.na(Sign)) %&gt;%
+  select(origin, words, Importance, Sign, pred_origin)
+```
+
+```
+## # A tibble: 4 x 5
+##   origin   words       Importance Sign  pred_origin
+##   &lt;fct&gt;    &lt;chr&gt;            &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;      
+## 1 Scotland might           0.227  NEG   Scotland   
+## 2 Scotland seen            0.0405 NEG   Scotland   
+## 3 Scotland physical        0.515  NEG   Scotland   
+## 4 Scotland hospitality     0.0484 NEG   Scotland
+```
+
+---
+
+## Prediction - sentence containing "Scotland"
+
+
+
+
+|                                                                                                                                                                                       |
+|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|although we are tackling this virus as one united kingdom, it remains the case that the devolved administrations are responsible for lockdown in scotland, wales and northern ireland. |
+
+--
+
+
+```r
+uk_sentence_scotland %&gt;%
+  tidytext::unnest_tokens(words, sentence) %&gt;%
+  left_join(vi_data_ds, by = c("words" = "Variable")) %&gt;%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %&gt;%
+  filter(!is.na(Sign)) %&gt;%
+  select(origin, words, Importance, Sign, pred_origin)
+```
+
+```
+## # A tibble: 8 x 5
+##   origin words    Importance Sign  pred_origin
+##   &lt;fct&gt;  &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;      
+## 1 UK     although     0.543  NEG   Scotland   
+## 2 UK     united       0.0263 POS   UK         
+## 3 UK     kingdom      2.59   POS   UK         
+## 4 UK     remains      0.277  NEG   Scotland   
+## 5 UK     devolved     0.979  POS   UK         
+## 6 UK     scotland     6.21   NEG   Scotland   
+## 7 UK     northern     1.25   POS   UK         
+## 8 UK     ireland      0.283  POS   UK
+```
+
+---
+
+## Prediction - sentence containing "freedom"
+
+
+
+
+|                                                                                                                                                                                                                                              |
+|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|however, i hope that these changes do allow children a bit more freedom in meeting up with friends, and allow you to make a bit more of your holidays, even if, as will probably be the case in scotland, it is raining for much of the time. |
+
+--
+
+
+```r
+scot_sentence_freedom %&gt;%
+  tidytext::unnest_tokens(words, sentence) %&gt;%
+  left_join(vi_data_ds, by = c("words" = "Variable")) %&gt;%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %&gt;%
+  filter(!is.na(Sign)) %&gt;%
+  select(origin, words, Importance, Sign, pred_origin)
+```
+
+```
+## # A tibble: 8 x 5
+##   origin   words    Importance Sign  pred_origin
+##   &lt;fct&gt;    &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;      
+## 1 Scotland however       1.71  NEG   Scotland   
+## 2 Scotland allow         0.260 POS   UK         
+## 3 Scotland bit           0.184 NEG   Scotland   
+## 4 Scotland freedom       1.85  POS   UK         
+## 5 Scotland allow         0.260 POS   UK         
+## 6 Scotland bit           0.184 NEG   Scotland   
+## 7 Scotland scotland      6.21  NEG   Scotland   
+## 8 Scotland time          0.236 POS   UK
+```
+
+---
+
+## Acknowledgements &amp; learn more
+
+- Read the full case study, with code: https://github.com/mine-cetinkaya-rundel/fm-speeches-covid19
+
+- Learn tidyverse: https://www.tidyverse.org/learn
+
+- Learn tidymodels: https://www.tidymodels.org/learn
+
+- Much of this was inspired by Julia Silge and Emil Hvitfeldt's useR tutorial: 
+
+https://emilhvitfeldt.github.io/useR2020-text-modeling-tutorial
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightLines": true,
+"highlightStyle": "solarized-light",
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

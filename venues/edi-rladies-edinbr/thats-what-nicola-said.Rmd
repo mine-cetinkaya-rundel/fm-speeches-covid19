@@ -45,6 +45,18 @@ knitr::opts_chunk$set(echo = TRUE,
 xaringanExtra::use_panelset()
 ```
 
+## Data science cycle
+
+```{r echo=FALSE, out.width="80%"}
+knitr::include_graphics("img/data-science.png")
+```
+
+.footnote[
+[R for Data Science](https://r4ds.had.co.nz/introduction.html), Grolemund and Wickham.
+]
+
+---
+
 ## tidyverse 
 
 .pull-left[
@@ -69,45 +81,6 @@ class: middle
 ```{r echo=FALSE, out.width="80%"}
 knitr::include_graphics("img/tidyverse-packages.png")
 ```
-
----
-
-## tidymodels
-
-.pull-left[
-```{r echo=FALSE, out.width="80%"}
-knitr::include_graphics("img/tidymodels.png")
-```
-]
-
-.pull-right[
-.center[.large[
-[tidymodels.org](https://www.tidymodels.org/)
-]]
-
-- The **tidymodels** framework is a collection of packages for modeling and machine learning using **tidyverse** principles.
-- All packages share an underlying philosophy and a common grammar
-]
-
----
-
-class: middle
-
-```{r echo=FALSE, out.width="90%"}
-knitr::include_graphics("img/tidymodels-packages.png")
-```
-
----
-
-## Data science cycle
-
-```{r echo=FALSE, out.width="80%"}
-knitr::include_graphics("img/data-science.png")
-```
-
-.footnote[
-[R for Data Science](https://r4ds.had.co.nz/introduction.html), Grolemund and Wickham.
-]
 
 ---
 
@@ -868,6 +841,33 @@ covid_speeches_sentences %>%
 
 ---
 
+## tidymodels
+
+.pull-left[
+```{r echo=FALSE, out.width="80%"}
+knitr::include_graphics("img/tidymodels.png")
+```
+]
+
+.pull-right[
+.center[.large[
+[tidymodels.org](https://www.tidymodels.org/)
+]]
+
+- The **tidymodels** framework is a collection of packages for modeling and machine learning using **tidyverse** principles.
+- All packages share an underlying philosophy and a common grammar
+]
+
+---
+
+class: middle
+
+```{r echo=FALSE, out.width="90%"}
+knitr::include_graphics("img/tidymodels-packages.png")
+```
+
+---
+
 ## Split into testing and training
 
 ```{r}
@@ -933,9 +933,11 @@ covid_wflow_tune_ds <- workflow() %>%
 ]
 
 .panel[.panel-name[Output]
+.small[
 ```{r}
 covid_wflow_tune_ds
 ```
+]
 ]
 ]
 
@@ -963,13 +965,24 @@ param_grid
 
 ---
 
-## Train models with all possible set of hyperparameters
+## Create folds for cross validation
 
-This can take a while...
-
-.panelset[
-.panel[.panel-name[Code]
 ```{r}
+set.seed(1234)
+covid_folds <- vfold_cv(covid_train, v = 10, strata = origin)
+
+covid_folds
+```
+
+---
+
+```{r echo=FALSE}
+covid_fit_rs_tune_ds <- read_rds(here::here("model-output", "covid_fit_rs_tune_ds.rds"))
+```
+
+## Train models 
+
+```{r eval = FALSE}
 set.seed(24)
 covid_fit_rs_tune_ds <- tune_grid(
   covid_wflow_tune_ds,
@@ -978,18 +991,10 @@ covid_fit_rs_tune_ds <- tune_grid(
   control = control_grid(save_pred = TRUE)
 )
 ```
-]
 
-.panel[.panel-name[Output]
-```{r echo=FALSE}
-covid_fit_rs_tune_ds <- read_rds(here::here("model-output", "covid_fit_rs_tune_ds.rds"))
-```
-
-```{r}
+```{r warning = FALSE}
 covid_fit_rs_tune_ds
 ```
-]
-]
 
 ---
 
@@ -1024,7 +1029,7 @@ best_roc_auc_ds
 
 .panelset[
 .panel[.panel-name[Plot]
-```{r roc, echo=FALSE, fig.asp = 1.2, out.width = 0.5}
+```{r roc-folds, echo = FALSE, out.width = "70%"}
 collect_predictions(covid_fit_rs_tune_ds, parameters = best_roc_auc_ds) %>%
   group_by(id) %>%
   roc_curve(truth = origin, .pred_Scotland) %>%
@@ -1038,7 +1043,7 @@ collect_predictions(covid_fit_rs_tune_ds, parameters = best_roc_auc_ds) %>%
 ]
 
 .panel[.panel-name[Code]
-```{r ref.label = "roc", fig.show = "hide"}
+```{r ref.label = "roc-folds", fig.show = "hide"}
 ```
 ]
 ]
@@ -1060,8 +1065,8 @@ covid_fit_final_ds <- last_fit(
 )
 ```
 
-```{r}
-covid_wflow_final_ds
+```{r warning = FALSE}
+covid_fit_final_ds
 ```
 
 
@@ -1078,7 +1083,9 @@ covid_fit_final_ds %>%
 
 ## ROC curve for final model
 
-```{r}
+.panelset[
+.panel[.panel-name[Plot]
+```{r roc-final, echo = FALSE, out.width = "70%"}
 covid_fit_final_ds %>%
   collect_predictions() %>%
   roc_curve(truth = origin, .pred_Scotland) %>%
@@ -1086,16 +1093,20 @@ covid_fit_final_ds %>%
   labs(title = "ROC curve for final model")
 ```
 
+]
+
+.panel[.panel-name[Code]
+```{r ref.label = "roc-final", fig.show = "hide"}
+```
+]
+]
+
 ---
 
 ## Variable importance
 
 .panelset[
 .panel[.panel-name[Code]
-```{r echo=FALSE}
-vi_data_ds <- read_rds(here::here("model-output", "vi_data_ds.rds"))
-```
-
 ```{r eval = FALSE}
 vi_data_ds <- covid_wflow_tune_ds %>%
   fit(covid_train) %>%
@@ -1109,32 +1120,20 @@ vi_data_ds <- covid_wflow_tune_ds %>%
 
 .panel[.panel-name[Output]
 ```{r echo=FALSE}
-covid_fit_rs_tune_ds <- read_rds(here::here("model-output", "covid_fit_rs_tune_ds.rds"))
-```
-
-```{r}
-covid_fit_rs_tune_ds
-```
-]
-]
-
-
-
-```{r eval=FALSE}
-
+vi_data_ds <- read_rds(here::here("model-output", "vi_data_ds.rds"))
 ```
 
 ```{r}
 vi_data_ds
 ```
+]
+]
 
 ---
 
-## Variable importance, visualised
-
 .panelset[
 .panel[.panel-name[Plot]
-```{r vip, echo=FALSE, fig.asp = 1.2, out.width = 0.5}
+```{r vip, echo=FALSE, out.width = "60%", fig.asp = 0.85, fig.width = 10}
 vi_data_ds %>%
   mutate(Importance = abs(Importance)) %>%
   filter(Importance != 0) %>%
@@ -1147,9 +1146,8 @@ vi_data_ds %>%
   scale_x_continuous(expand = c(0, 0)) +
   scale_fill_manual(values = c(scotblue, ukred)) +
   facet_wrap(~pred_origin, scales = "free") +
-  labs(y = NULL)
+  labs(y = NULL, title = "Variable importance")
 ```
-
 ]
 
 .panel[.panel-name[Code]
@@ -1160,7 +1158,7 @@ vi_data_ds %>%
 
 ---
 
-## Prediction - sentence containing "pysical"
+## Prediction - sentence containing "physical"
 
 ```{r echo=FALSE}
 scot_sentence_physical <- covid_test %>%
@@ -1168,10 +1166,15 @@ scot_sentence_physical <- covid_test %>%
   slice(1)
 ```
 
-.small[
-```{r}
-scot_sentence_physical$sentence
+```{r echo = FALSE}
+scot_sentence_physical %>%
+  pull(sentence) %>%
+  kable(col.names = "")
+```
 
+--
+
+```{r}
 scot_sentence_physical %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
@@ -1179,7 +1182,6 @@ scot_sentence_physical %>%
   filter(!is.na(Sign)) %>%
   select(origin, words, Importance, Sign, pred_origin)
 ```
-]
 
 ---
 
@@ -1191,10 +1193,15 @@ uk_sentence_scotland <- covid_test %>%
   slice(2)
 ```
 
-.small[
-```{r}
-uk_sentence_scotland$sentence
+```{r echo = FALSE}
+uk_sentence_scotland %>%
+  pull(sentence) %>%
+  kable(col.names = "")
+```
 
+--
+
+```{r}
 uk_sentence_scotland %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
@@ -1202,7 +1209,6 @@ uk_sentence_scotland %>%
   filter(!is.na(Sign)) %>%
   select(origin, words, Importance, Sign, pred_origin)
 ```
-]
 
 ---
 
@@ -1214,10 +1220,15 @@ scot_sentence_freedom <- covid_test %>%
   slice(3)
 ```
 
-.small[
-```{r}
-scot_sentence_freedom$sentence
+```{r echo = FALSE}
+scot_sentence_freedom %>%
+  pull(sentence) %>%
+  kable(col.names = "")
+```
 
+--
+
+```{r}
 scot_sentence_freedom %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
@@ -1225,7 +1236,6 @@ scot_sentence_freedom %>%
   filter(!is.na(Sign)) %>%
   select(origin, words, Importance, Sign, pred_origin)
 ```
-]
 
 ---
 
