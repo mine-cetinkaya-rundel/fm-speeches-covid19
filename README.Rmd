@@ -1,15 +1,14 @@
 ---
-title: "fm-speeches-covid19"
+title: "Scotland and UK COVID-19 briefings"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+## Talks
 
-## Comparing COVID speeches by Scottish and UK governments.
+- TwinCities WIMLDS - Mar 2021 - [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/twincities-wimlds/tidyverse-tidymodels.html#1)
+- R-Ladies Edinburgh + edinbR - April 2021 - [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/edi-rladies-edinbr/thats-what-nicola-said.html#1)
 
-Data sources:
+## Data sources
 
 - Scotland: [Source](https://www.gov.scot/collections/first-ministers-speeches)
 
@@ -22,7 +21,3 @@ robotstxt::paths_allowed("https://www.gov.scot/publications")
 ```{r}
 robotstxt::paths_allowed("https://www.gov.uk/")
 ```
-
-## Talks
-
-- TwinCities WIMLDS - Mar 2021 - [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/twincities-wimlds/tidyverse-tidymodels.html#1)

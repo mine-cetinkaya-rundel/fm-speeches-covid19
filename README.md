@@ -1,9 +1,14 @@
-fm-speeches-covid19
+Scotland and UK COVID-19 briefings
 ================
 
-## Comparing COVID speeches by Scottish and UK governments.
+## Talks
 
-Data sources:
+-   TwinCities WIMLDS - Mar 2021 -
+    [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/twincities-wimlds/tidyverse-tidymodels.html#1)
+-   R-Ladies Edinburgh + edinbR - April 2021 -
+    [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/edi-rladies-edinbr/thats-what-nicola-said.html#1)
+
+## Data sources
 
 -   Scotland:
     [Source](https://www.gov.scot/collections/first-ministers-speeches)
@@ -26,8 +31,3 @@ robotstxt::paths_allowed("https://www.gov.uk/")
     ##  www.gov.uk
 
     ## [1] TRUE
-
-## Talks
-
--   TwinCities WIMLDS - Mar 2021 -
-    [slides](https://mine-cetinkaya-rundel.github.io/fm-speeches-covid19/venues/twincities-wimlds/tidyverse-tidymodels.html#1)
