@@ -87,8 +87,7 @@ covid_speeches_scot_words %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free") +
   labs(
     title = "Sentiment and frequency of words in Scotland COVID-19 briefings",
@@ -111,8 +110,7 @@ covid_speeches_scot_words %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free") +
   labs(
     title = "Sentiment and frequency of words in Scotland COVID-19 briefings",
@@ -144,8 +142,7 @@ covid_speeches_scot_words %>%
   labs(
     title = "Sentiment in Scotland COVID-19 briefings",
     subtitle = "Sentiment score calculated as the number of positive - the number of negative words in each briefing,\naccording to the Bing lexicon",
-    x = "Date of briefing", y = "Sentiment score (positive - negative)",
-    caption = "Data: gov.scot | Plot: @minebocek"
+    x = "Date of briefing", y = "Sentiment score (positive - negative)"
   ) +
   scale_color_manual(values = c(light_red, light_blue))
 ```
@@ -167,9 +164,8 @@ covid_speeches_scot_words %>%
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
   labs(
     title = "Sentiment in Scotland COVID-19 briefings",
-    subtitle = "Sentiment score calculated as the number of positive - the number of negative words in each briefing,\naccording to the Bing lexicon",
-    x = "Date of briefing", y = "Sentiment score (positive - negative)",
-    caption = "Data: gov.scot | Plot: @minebocek"
+    subtitle = "Sentiment score calculated as the number of positive - the number of negative words\nin each briefing, according to the Bing lexicon",
+    x = "Date of briefing", y = "Sentiment score (positive - negative)"
   ) +
   scale_color_manual(values = c(light_red, light_blue))
 ```
@@ -295,7 +291,7 @@ covid_speeches_scot_words %>%
   geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
   labs(
     x = "Date", y = "Frequency",
-    title = "Number of times anything related to vaccination is mentioned in briefing",
+    title = "Number of times anything related to vaccination is mentioned",
     subtitle = "Scotland briefings"
   ) +
   expand_limits(y = 0)
@@ -316,7 +312,7 @@ covid_speeches_scot_words %>%
   geom_text(aes(label = "🍺", size = n, group = 1), show.legend = FALSE) +
   labs(
     x = "Date", y = "Frequency",
-    title = 'Number of times "pub(s)" is mentioned in speech',
+    title = 'Number of times "pub(s)" is mentioned',
     subtitle = "Scotland briefings"
   ) +
   expand_limits(y = c(0, 15)) +
