@@ -101,3 +101,7 @@ covid_speeches_tf_ifd %>%
   scale_fill_manual(values = c(scotblue, ukred)) +
   scale_x_continuous(breaks = c(0, 0.00015, 0.0003), labels = label_number())
 ```
+
+Some differences observed:
+
+- "reclaiming our freedoms", "reclaim our lives in full" etc. in UK speeches 

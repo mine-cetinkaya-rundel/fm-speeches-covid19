@@ -155,15 +155,13 @@ covid_speeches_scot_words %>%
   mutate(sentiment = positive - negative) %>%
   ggplot(aes(x = date, y = sentiment)) +
   geom_line(color = "gray") +
-  geom_point(aes(color = sentiment > 0), size = 2) +
+  geom_point(aes(color = sentiment > 0, shape = sentiment > 0), size = 2, show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
-  guides(color = FALSE) +
   labs(
     title = "Daily sentiment score of words in Scotland COVID-19 briefings",
     subtitle = "Bing lexicon",
     x = "Date", y = "Sentiment score (positive - negative)"
-  ) +
-  theme(legend.position = "bottom")
+  )
 ```
 
 and now with a smooth curve...
@@ -176,16 +174,14 @@ covid_speeches_scot_words %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
   mutate(sentiment = positive - negative) %>%
   ggplot(aes(x = date, y = sentiment)) +
-  geom_smooth(color = "gray", method = "lm", formula = y ~ x) +
-  geom_point(aes(color = sentiment > 0), size = 1) +
+  geom_smooth(color = "gray", method = "loess", formula = y ~ x) +
+  geom_point(aes(color = sentiment > 0, shape = sentiment > 0), size = 1, show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
-  guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in Scotland COVID-19 briefings",
-    subtitle = "Bing lexicon",
+    title = "Sentiment score Scotland COVID-19 briefings",
+    subtitle = "Sentiment score is calculated as number of positive - number of negative words, according to the Bing lexicon",
     x = "Date", y = "Sentiment score (positive - negative)"
-  ) +
-  theme(legend.position = "bottom")
+  )
 ```
 
 ### Lexicon: NRC

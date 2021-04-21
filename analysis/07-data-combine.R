@@ -25,4 +25,4 @@ covid_speeches_words <- covid_speeches_scot_words %>%
 
 # save data --------------------------------------------------------------------
 
-write_rds(covid_speeches_words, file = "processed-data/covid-speeches-words.rds", compress = "bz2")
+write_rds(covid_speeches_words, file = "processed-data/covid-speeches-words.rds", compress = "xz")

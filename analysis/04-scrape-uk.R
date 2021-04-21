@@ -51,7 +51,8 @@ speech_urls_uk <- map_dfr(all_speeches_page_uk, get_speech_urls_uk)
 # only PM covid speeches -------------------------------------------------------
 
 covid_speech_urls_uk <- speech_urls_uk %>%
-  filter(str_detect(title, "statement on coronavirus")) %>%
+  filter(str_detect(title, "coronavirus")) %>%
+  filter(str_detect(title, "statement")) %>%
   filter(str_detect(title, "Prime Minister|PM"))
 
 # function to scrape each speech -----------------------------------------------

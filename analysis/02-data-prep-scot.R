@@ -70,6 +70,6 @@ covid_speeches_scot_bigrams <- covid_speeches_scot %>%
 
 # save data --------------------------------------------------------------------
 
-write_rds(covid_speeches_scot, file = "processed-data/covid-speeches-scot.rds")
-write_rds(covid_speeches_scot_bigrams, file = "processed-data/covid-speeches-scot-bigrams.rds")
-write_rds(covid_speeches_scot_words, file = "processed-data/covid-speeches-scot-words.rds", compress = "bz2")
+write_rds(covid_speeches_scot, file = "processed-data/covid-speeches-scot.rds", compress = "xz")
+write_rds(covid_speeches_scot_bigrams, file = "processed-data/covid-speeches-scot-bigrams.rds", compress = "xz")
+write_rds(covid_speeches_scot_words, file = "processed-data/covid-speeches-scot-words.rds", compress = "xz")

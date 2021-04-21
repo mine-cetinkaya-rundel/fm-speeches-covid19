@@ -85,14 +85,14 @@ covid_folds <- vfold_cv(covid_train, v = 10, strata = origin)
 
 # fit resamples ----------------------------------------------------------------
 
-covid_fit_rs_ds <- covid_wflow %>%
+covid_fit_rs_ds <- covid_wflow_ds %>%
   fit_resamples(
     covid_folds,
     control = control_resamples(save_pred = TRUE)
   )
 
-covid_train_metrics_ds <- collect_metrics(covid_fit_rs)
-covid_train_pred_ds <- collect_predictions(covid_fit_rs)
+covid_train_metrics_ds <- collect_metrics(covid_fit_rs_ds)
+covid_train_pred_ds <- collect_predictions(covid_fit_rs_ds)
 
 covid_train_pred_ds %>%
   group_by(id) %>%
@@ -155,7 +155,7 @@ covid_wflow_tune_ds <- workflow() %>%
 
 param_grid <- grid_regular(
   penalty(range = c(-4, 0)),
-  max_tokens(range = c(500, 2000)),
+  max_tokens(range = c(500, 1500)), # use lower upper limit than not downsampling approach
   levels = 5
 )
 
@@ -168,7 +168,7 @@ param_grid <- grid_regular(
 #  control = control_grid(save_pred = TRUE)
 #)
 #
-#write_rds(covid_fit_rs_tune_ds, here::here("model-output", "covid_fit_rs_tune_ds.rds"), compress = "bz2")
+#write_rds(covid_fit_rs_tune_ds, here::here("model-output", "covid_fit_rs_tune_ds.rds"), compress = "xz")
 
 covid_fit_rs_tune_ds <- read_rds(here::here("model-output", "covid_fit_rs_tune_ds.rds"))
 
@@ -217,7 +217,7 @@ vi_data_ds %>%
   ) %>%
   filter(Importance != 0) %>%
   group_by(Sign) %>%
-  slice_head(n = 20) %>%
+  slice_head(n = 40) %>%
   ungroup() %>%
   mutate(pred_origin = if_else(Sign == "POS", "UK", "Scotland")) %>% 
   ggplot(aes(
@@ -254,7 +254,7 @@ covid_fit_final_ds %>%
 
 # predict ----------------------------------------------------------------------
 
-scot_sentence <- covid_train %>%
+scot_sentence <- covid_test %>%
   filter(origin == "Scotland", str_detect(sentence, "physical")) %>%
   slice(2)
 
@@ -265,9 +265,9 @@ scot_sentence %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
   select(-url) %>%
-  print(n = 25)
+  filter(!is.na(Sign))
 
-uk_sentence <- covid_train %>%
+uk_sentence <- covid_test %>%
   filter(origin == "UK", str_detect(sentence, "scotland")) %>%
   slice(2)
 
@@ -278,5 +278,30 @@ uk_sentence %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
   select(-url) %>%
-  print(n = 25)
+  filter(!is.na(Sign))
 
+scot_sentence_disease <- covid_test %>%
+  filter(origin == "Scotland", str_detect(sentence, "disease")) %>%
+  slice(1)
+
+scot_sentence_disease$sentence
+
+scot_sentence_disease %>%
+  tidytext::unnest_tokens(words, sentence) %>%
+  left_join(vi_data_ds, by = c("words" = "Variable")) %>%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
+  select(-url) %>%
+  filter(!is.na(Sign))
+
+scot_sentence_freedom <- covid_test %>%
+  filter(origin == "Scotland", str_detect(sentence, "freedom")) %>%
+  slice(1)
+
+scot_sentence_freedom$sentence
+
+scot_sentence_freedom %>%
+  tidytext::unnest_tokens(words, sentence) %>%
+  left_join(vi_data_ds, by = c("words" = "Variable")) %>%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
+  select(-url) %>%
+  filter(!is.na(Sign))

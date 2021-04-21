@@ -94,7 +94,7 @@ covid_folds <- read_rds(here::here("model-output", "covid_folds.rds"))
 #    control = control_resamples(save_pred = TRUE)
 #  )
 
-#write_rds(covid_fit_rs, here::here("model-output", "covid_fit_rs.rds"), compress = "bz2")
+write_rds(covid_fit_rs, here::here("model-output", "covid_fit_rs.rds"), compress = "xz")
 
 covid_fit_rs <- read_rds(here::here("model-output", "covid_fit_rs.rds"))
 
@@ -174,7 +174,7 @@ param_grid <- grid_regular(
 #  control = control_grid(save_pred = TRUE)
 #)
 
-write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "bz2")
+#write_rds(covid_fit_rs_tune, here::here("model-output", "covid_fit_rs_tune.rds"), compress = "xz")
 
 covid_fit_rs_tune <- read_rds(here::here("model-output", "covid_fit_rs_tune.rds"))
 
@@ -213,7 +213,7 @@ library(vip)
 #  mutate(Variable = str_remove_all(Variable, "tfidf_sentence_")) %>%
 #  filter(Importance != 0)
 
-write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "bz2")
+#write_rds(vi_data, here::here("model-output", "vi_data.rds"), compress = "xz")
 
 vi_data <- read_rds(here::here("model-output", "vi_data.rds"))
 
@@ -245,8 +245,8 @@ vi_data %>%
 #  covid_wflow_final, 
 #  covid_split
 #)
-#
-#write_rds(covid_fit_final, here::here("model-output", "covid_fit_final.rds"), compress = "bz2")
+
+#write_rds(covid_fit_final, here::here("model-output", "covid_fit_final.rds"), compress = "xz")
 
 covid_fit_final <- read_rds(here::here("model-output", "covid_fit_final.rds"))
 
@@ -260,7 +260,7 @@ covid_fit_final %>%
 
 # predict ----------------------------------------------------------------------
 
-scot_sentence <- covid_train %>%
+scot_sentence <- covid_test %>%
   filter(origin == "Scotland", str_detect(sentence, "physical")) %>%
   slice(2)
 
@@ -271,9 +271,9 @@ scot_sentence %>%
   left_join(vi_data, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
   select(-url) %>%
-  print(n = 25)
+  filter(!is.na(Sign))
 
-uk_sentence <- covid_train %>%
+uk_sentence <- covid_test %>%
   filter(origin == "UK", str_detect(sentence, "scotland")) %>%
   slice(2)
 
@@ -284,5 +284,18 @@ uk_sentence %>%
   left_join(vi_data, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
   select(-url) %>%
-  print(n = 25)
+  filter(!is.na(Sign))
+
+uk_sentence <- covid_test %>%
+  filter(origin == "UK", str_detect(sentence, "disease")) %>%
+  slice(1)
+
+uk_sentence$sentence
+
+uk_sentence %>%
+  tidytext::unnest_tokens(words, sentence) %>%
+  left_join(vi_data, by = c("words" = "Variable")) %>%
+  mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
+  select(-url) %>%
+  filter(!is.na(Sign))
 

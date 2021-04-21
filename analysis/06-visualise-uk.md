@@ -1,6 +1,6 @@
 06-visualise-uk
 ================
-2021-03-11
+2021-04-20
 
 ## Length of speech
 
@@ -47,7 +47,7 @@ covid_speeches_uk_words <- covid_speeches_uk_words %>%
 ## Word frequency
 
 ``` r
-threshold <- 100
+threshold <- 75
 
 covid_speeches_uk_words %>%
   count(word, sort = TRUE) %>%
@@ -84,12 +84,13 @@ covid_speeches_uk_words %>%
     title = "Sentiment and frequency of words in UK COVID-19 briefings",
     subtitle = "Bing lexicon",
     y = NULL, x = NULL
-  )
+  ) +
+  scale_fill_manual(values = c(light_red, light_blue))
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-4-1.png" width="100%" />
 
-## Daily sentiments
+## Briefing sentiments
 
 ### Lexicon: Bing
 
@@ -104,15 +105,15 @@ covid_speeches_uk_words %>%
   mutate(sentiment = positive - negative) %>%
   ggplot(aes(x = date, y = sentiment)) +
   geom_line(color = "gray") +
-  geom_point(aes(color = sentiment > 0), size = 2) +
+  geom_point(aes(color = sentiment > 0, shape = sentiment > 0), size = 2, alpha = 0.8,  show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
-  guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in UK COVID-19 briefings",
-    subtitle = "Bing lexicon",
-    x = "Date", y = "Sentiment score (positive - negative)"
+    title = "Sentiment in UK COVID-19 briefings",
+    subtitle = "Sentiment score calculated as the number of positive - the number of negative words in each briefing,\naccording to the Bing lexicon",
+    x = "Date of briefing", y = "Sentiment score (positive - negative)",
+    caption = "Data: gov.scot | Plot: @minebocek"
   ) +
-  theme(legend.position = "bottom")
+  scale_color_manual(values = c(light_red, light_blue))
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-5-1.png" width="100%" />
@@ -127,16 +128,16 @@ covid_speeches_uk_words %>%
   pivot_wider(names_from = sentiment, values_from = n) %>%
   mutate(sentiment = positive - negative) %>%
   ggplot(aes(x = date, y = sentiment)) +
-  geom_smooth(color = "gray", method = "lm", formula = y ~ x) +
-  geom_point(aes(color = sentiment > 0), size = 1) +
+  geom_smooth(color = "gray", method = "loess", formula = y ~ x) +
+  geom_point(aes(color = sentiment > 0, shape = sentiment > 0), size = 2, alpha = 0.8, show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "lightgray") +
-  guides(color = FALSE) +
   labs(
-    title = "Daily sentiment score of words in UK COVID-19 briefings",
-    subtitle = "Bing lexicon",
-    x = "Date", y = "Sentiment score (positive - negative)"
+    title = "Sentiment in UK COVID-19 briefings",
+    subtitle = "Sentiment score calculated as the number of positive - the number of negative words in each briefing,\naccording to the Bing lexicon",
+    x = "Date of briefing", y = "Sentiment score (positive - negative)",
+    caption = "Data: gov.scot | Plot: @minebocek"
   ) +
-  theme(legend.position = "bottom")
+  scale_color_manual(values = c(light_red, light_blue))
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-6-1.png" width="100%" />
@@ -168,7 +169,8 @@ covid_speeches_uk_words %>%
     y = NULL, x = NULL
   ) +
   scale_x_continuous(breaks = c(0, 200)) +
-  theme_minimal(base_size = 11)
+  theme_minimal(base_size = 11) +
+  scale_fill_manual(values = c(light_red, light_blue))
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-7-1.png" width="100%" />
@@ -191,7 +193,8 @@ covid_speeches_uk_words %>%
     title = "Sentiment score of words in UK COVID-19 briefings over time",
     subtitle = "NRC lexicon",
     x = "Date", y = "Sentiment score", color = NULL
-  )
+  ) +
+  scale_color_manual(values = c(light_red, light_blue))
 ```
 
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-8-1.png" width="100%" />
@@ -249,9 +252,30 @@ covid_speeches_uk_words %>%
   filter(str_detect(word, "[Vv]accin")) %>%
   count(date) %>%
   ggplot(aes(x = date, y = n)) +
+  geom_line(size = 0.3, color = "gray") +
+  geom_smooth(size = 0.5, color = light_red, se = FALSE, span = 0.4) +
   geom_text(aes(label = "💉", size = n), show.legend = FALSE) +
   labs(x = "Date", y = "Frequency",
-       title = 'Number of times "vaccine" is mentioned in speech')
+       title = 'Number of times "vaccine" is mentioned in speech') +
+  expand_limits(y = 0)
 ```
 
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
 <img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-11-1.png" width="100%" />
+
+## Pubs
+
+``` r
+covid_speeches_uk_words %>%
+  filter(str_detect(word, "\\b[Pp]ubs?\\b")) %>%
+  count(date) %>%
+  ggplot(aes(x = date, y = n)) +
+  geom_line(size = 0.3, color = "gray") +
+  geom_text(aes(label = "🍺", size = n, group = 1), show.legend = FALSE) +
+  labs(x = "Date", y = "Frequency",
+       title = 'Number of times "pub(s)" is mentioned in speech') +
+  expand_limits(y = c(0, 5))
+```
+
+<img src="06-visualise-uk_files/figure-gfm/unnamed-chunk-12-1.png" width="100%" />
