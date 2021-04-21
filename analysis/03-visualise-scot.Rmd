@@ -113,8 +113,7 @@ covid_speeches_scot_words %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free") +
   labs(
     title = "Sentiment and frequency of words in Scotland COVID-19 briefings",
@@ -134,8 +133,7 @@ covid_speeches_scot_words %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free") +
   labs(
     title = "Sentiment and frequency of words in Scotland COVID-19 briefings",

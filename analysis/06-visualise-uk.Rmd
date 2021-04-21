@@ -17,7 +17,8 @@ library(glue)
 theme_set(theme_minimal(base_size = 12))
 
 # set color
-ukred <- "#D00C27"
+# https://www.colorexpertsbd.com/blog/all-nations-flags-hex-codes-guideline/
+ukred <- "#C8102E"
 
 light_blue <- "#569BBD"
 light_red <- "#F05133"
@@ -82,8 +83,7 @@ covid_speeches_uk_words %>%
   count(word, sort = TRUE) %>%
   filter(n > threshold) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = n)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  geom_col(show.legend = FALSE) +
   labs(
     title = "Frequency of words in UK COVID-19 briefings",
     subtitle = glue("Words occurring more than {threshold} times"),
@@ -103,8 +103,7 @@ covid_speeches_uk_words %>%
   group_by(sentiment) %>%
   slice_head(n = 20) %>%
   ggplot(aes(y = fct_reorder(word, n), x = n, fill = sentiment)) +
-  geom_col() +
-  guides(fill = FALSE) +
+  geom_col(show.legend = FALSE) +
   facet_wrap(~sentiment, scales = "free") +
   labs(
     title = "Sentiment and frequency of words in UK COVID-19 briefings",
