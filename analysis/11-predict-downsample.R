@@ -254,30 +254,28 @@ covid_fit_final_ds %>%
 
 # predict ----------------------------------------------------------------------
 
-scot_sentence <- covid_test %>%
+scot_sentence_physical <- covid_test %>%
   filter(origin == "Scotland", str_detect(sentence, "physical")) %>%
-  slice(2)
+  slice(1)
 
-scot_sentence$sentence
+scot_sentence_physical$sentence
 
-scot_sentence %>%
+scot_sentence_physical %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
-  select(-url) %>%
   filter(!is.na(Sign))
 
-uk_sentence <- covid_test %>%
+uk_sentence_scotland <- covid_test %>%
   filter(origin == "UK", str_detect(sentence, "scotland")) %>%
   slice(2)
 
-uk_sentence$sentence
+uk_sentence_scotland$sentence
 
-uk_sentence %>%
+uk_sentence_scotland %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
-  select(-url) %>%
   filter(!is.na(Sign))
 
 scot_sentence_disease <- covid_test %>%
@@ -290,12 +288,11 @@ scot_sentence_disease %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
-  select(-url) %>%
   filter(!is.na(Sign))
 
 scot_sentence_freedom <- covid_test %>%
   filter(origin == "Scotland", str_detect(sentence, "freedom")) %>%
-  slice(1)
+  slice(3)
 
 scot_sentence_freedom$sentence
 
@@ -303,5 +300,4 @@ scot_sentence_freedom %>%
   tidytext::unnest_tokens(words, sentence) %>%
   left_join(vi_data_ds, by = c("words" = "Variable")) %>%
   mutate(pred_origin = if_else(Sign == "NEG", "Scotland", "UK")) %>%
-  select(-url) %>%
   filter(!is.na(Sign))
