@@ -46,6 +46,12 @@ knitr::opts_chunk$set(echo = TRUE,
 xaringanExtra::use_panelset()
 ```
 
+```{r out.width = "50%", fig.asp = 1.2, echo = FALSE}
+knitr::include_graphics("img/tweet.png")
+```
+
+---
+
 ## Data science cycle
 
 ```{r echo=FALSE, out.width="80%"}
