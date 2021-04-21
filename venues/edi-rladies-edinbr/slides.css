@@ -2,6 +2,11 @@
 @import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700);
 @import url(https://fonts.googleapis.com/css?family=Fira+Mono|Open+Sans);
 
+.scroll-box-20 {
+  height:20em;
+  overflow-y: scroll;
+}
+
 /* Turn off slide numbers */
 /* Don't want them on videos! */
 .remark-slide-number {

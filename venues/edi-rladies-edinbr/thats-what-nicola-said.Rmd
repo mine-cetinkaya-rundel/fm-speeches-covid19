@@ -1,7 +1,8 @@
 ---
 title: "That's what Nicola said"
-author: "A tidy case study of<br>Nicola Sturgeon's COVID-19 briefings"
-date: "<br><br> Dr. Mine Çetinkaya-Rundel <br> UoE | RStudio | Duke"
+subtitle: "A tidy case study of<br>Nicola Sturgeon's COVID-19 briefings"
+author: "<br>🔗 [bit.ly/thats-what-nicola-said](http://bit.ly/thats-what-nicola-said)"
+date: "<br><br> Dr. Mine Çetinkaya-Rundel <br> UoE | RStudio | Duke <br> 🐦 [minebocek](https://twitter.com/minebocek)"
 output:
   xaringan::moon_reader:
     css: ["xaringan-themer.css", "slides.css"]
@@ -492,7 +493,7 @@ covid_speeches_scot_words <- covid_speeches_scot %>%
     text = str_replace_all(text, "Covid-19", "COVID_19"),
     text = str_replace_all(text, "Covid 19", "COVID_19")
   ) %>%
-  unnest_tokens(word, text) %>%
+  tidytext::unnest_tokens(word, text) %>%
   relocate(date, word)
 
 covid_speeches_scot_words %>% print(n = 15)
@@ -537,7 +538,7 @@ covid_speeches_scot_words %>%
   geom_col(show.legend = FALSE) +
   labs(
     title = "Frequency of words in Scotland COVID-19 briefings",
-    subtitle = glue("Words occurring more than {threshold} times"),
+    subtitle = glue::glue("Words occurring more than {threshold} times"),
     y = NULL, x = NULL
   )
 ```
@@ -657,7 +658,7 @@ covid_speeches_scot_words %>%
 .panel[.panel-name[Plot]
 ```{r social-physical, echo=FALSE, out.width = "70%"}
 covid_speeches_scot %>%
-  unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+  tidytext::unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
   filter(str_detect(bigram, "social dist|physical dist")) %>%
   mutate(soc_phys = if_else(str_detect(bigram, "social"), "S", "P")) %>%
   count(date, soc_phys) %>%
@@ -756,7 +757,7 @@ covid_speeches_tf_ifd <- covid_speeches_words %>%
   count(origin, word, sort = TRUE) %>%
   group_by(origin) %>%
   mutate(total = sum(n)) %>%
-  bind_tf_idf(word, origin, n)
+  tidytext::bind_tf_idf(word, origin, n)
 
 covid_speeches_tf_ifd %>%
   arrange(desc(tf_idf)) %>%
@@ -819,7 +820,7 @@ covid_speeches %>%
 
 ```{r}
 covid_speeches_sentences <- covid_speeches %>%
-  unnest_tokens(sentence, text, token = "sentences")
+  tidytext::unnest_tokens(sentence, text, token = "sentences")
 
 covid_speeches_sentences %>%
   relocate(sentence)
@@ -1015,7 +1016,7 @@ covid_fit_rs_tune_ds %>%
 
 ---
 
-## Select "best" model
+## Select *best* model
 
 ```{r}
 best_roc_auc_ds <- select_best(covid_fit_rs_tune_ds, "roc_auc")
@@ -1025,7 +1026,7 @@ best_roc_auc_ds
 
 ---
 
-## Evaluate best model
+## Evaluate *best* model
 
 .panelset[
 .panel[.panel-name[Plot]
@@ -1250,3 +1251,13 @@ scot_sentence_freedom %>%
 - Much of this was inspired by Julia Silge and Emil Hvitfeldt's useR tutorial: 
 
 https://emilhvitfeldt.github.io/useR2020-text-modeling-tutorial
+
+---
+
+.scroll-box-20[
+.xsmall[
+```{r}
+sessioninfo::session_info()
+```
+]
+]
